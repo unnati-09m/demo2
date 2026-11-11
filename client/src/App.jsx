@@ -24,6 +24,8 @@ async function api(path, token, options = {}) {
 const initials = (name = '') => name.split(' ').filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase();
 const dateText = value => value ? new Date(value).toLocaleDateString() : 'Not specified';
 
+// Shared React shell. Feature sections are marked below by their owner for team hand-off.
+// Feature owner: Unnati — authentication, desktop integration and app-wide navigation.
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem('ac_token') || '');
   const [user, setUser] = useState(() => {
@@ -209,6 +211,7 @@ export default function App() {
     await action('/profile', 'PUT', payload);
   };
 
+  // Feature owner: Arshiyan — export alumni directory data as CSV.
   const downloadCsv = async () => {
     try {
       const response = await fetch(API + '/admin/alumni.csv', { headers: { Authorization: 'Bearer ' + token } });
@@ -357,6 +360,7 @@ export default function App() {
             </>
           )}
 
+          {/* Feature owner: Arshiyan — alumni profile directory, search and mentorship entry point. */}
           {tab === 'Alumni Directory' && (
             <>
               <div className="section-heading"><div><h3>{filteredAlumni.length} alumni found</h3><p>Search using an alumni name, department, batch or company.</p></div></div>
@@ -374,6 +378,7 @@ export default function App() {
             </>
           )}
 
+          {/* Feature owner: Nayan Jyoti — mentorship requests and response workflow. */}
           {tab === 'Mentorship' && (
             <>
               <div className="section-heading"><div><h3>{user.role === 'alumni' ? 'Requests for your guidance' : 'Your mentorship requests'}</h3><p>{user.role === 'alumni' ? 'Respond to students who would like to learn from you.' : 'Track the guidance requests you have sent.'}</p></div></div>
@@ -385,12 +390,14 @@ export default function App() {
             </>
           )}
 
+          {/* Feature owner: Arshiyan — career opportunities and student applications. */}
           {tab === 'Opportunities' && (
             <div className="opportunity-list">{opportunities.map(item => (
               <article className="opportunity-card" key={item.id}><div className="opportunity-icon"><BriefcaseBusiness size={20} /></div><div className="opportunity-copy"><span className="eyebrow">{item.type} · {item.location}</span><h3>{item.title}</h3><p className="company"><Building2 size={14} /> {item.company} · Shared by {item.posted_by}</p><p>{item.description}</p>{item.apply_by && <small><Clock3 size={13} /> Apply by {dateText(item.apply_by)}</small>}{item.application_url && <a href={item.application_url} target="_blank" rel="noreferrer">External application link <ArrowUpRight size={13} /></a>}</div>{user.role === 'student' && <button className="button button-primary" onClick={() => action('/opportunities/' + item.id + '/apply', 'POST', {})}>Apply <ArrowUpRight size={14} /></button>}</article>
             ))}{!opportunities.length && <div className="empty">No opportunities have been posted yet.</div>}</div>
           )}
 
+          {/* Feature owner: Arshiyan — students' submitted opportunity applications. */}
           {tab === 'My Applications' && (
             <div className="list-card">
               {applications.length ? applications.map(item => (
@@ -406,6 +413,7 @@ export default function App() {
             </div>
           )}
 
+          {/* Feature owner: Nayan Jyoti — events, registrations and attendee counts. */}
           {tab === 'Events' && (
             <div className="event-grid">{events.map(item => (
               <article className="event-card" key={item.id}><div className="event-date"><strong>{new Date(item.starts_at).getDate()}</strong><span>{new Date(item.starts_at).toLocaleString('en', { month: 'short' })}</span></div><div className="event-copy"><span className="eyebrow">COMMUNITY EVENT</span><h3>{item.title}</h3><p>{item.description}</p><small><MapPin size={13} /> {item.venue} · {item.attendee_count} attending</small></div><button className={'button ' + (item.registered ? 'button-outline' : 'button-primary')} disabled={item.registered} onClick={() => action('/events/' + item.id + '/register')}>{item.registered ? 'Registered' : 'Register'} {item.registered ? <Check size={14} /> : <ArrowUpRight size={14} />}</button></article>
@@ -438,12 +446,14 @@ export default function App() {
             </div>
           )}
 
+          {/* Feature owner: Nayan Jyoti — in-app notifications and read state. */}
           {tab === 'Notifications' && (
             <div className="list-card">{notifications.length ? notifications.map(item => (
               <div className="list-row" key={item.id}><div className="list-icon"><Bell size={17} /></div><div className="list-copy"><strong>{item.title}</strong><p>{item.body}</p><small>{new Date(item.created_at).toLocaleString()}</small></div>{!item.is_read && <button className="button button-small button-outline" onClick={() => action('/notifications/' + item.id + '/read', 'PATCH', {})}>Mark read</button>}</div>
             )) : <div className="empty">No notifications yet.</div>}</div>
           )}
 
+          {/* Feature owner: Nayan Jyoti — admin engagement summaries and report views. */}
           {tab === 'Admin Reports' && user.role === 'admin' && (
             <>
               <div className="stats">{stats.map(([label, value, Icon, color]) => <div className="stat" key={label}><span className={'stat-icon ' + color}><Icon size={18} /></span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div>
