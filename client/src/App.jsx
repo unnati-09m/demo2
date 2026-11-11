@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowUpRight, Bell, BriefcaseBusiness, Building2, CalendarDays, Check,
   ChevronDown, Clock3, FileDown, GraduationCap, Handshake, HeartHandshake,
-  LayoutDashboard, LogOut, MapPin, Menu, Network, Plus, Search, Users, X
+  LayoutDashboard, LogOut, MapPin, Menu, Moon, Network, Plus, Search, Sun, Users, X
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
@@ -48,6 +48,68 @@ export default function App() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [theme, setTheme] = useState('light');
+
+  // Load preferences through Electron Preload. Browser fallback is useful for UI development.
+  useEffect(() => {
+    let active = true;
+    const loadPreferences = async () => {
+      try {
+        const saved = window.desktop?.getPreferences
+          ? await window.desktop.getPreferences()
+          : JSON.parse(localStorage.getItem('ac_preferences') || '{}');
+        if (active) setTheme(saved.theme === 'dark' ? 'dark' : 'light');
+      } catch {
+        if (active) setTheme('light');
+      }
+    };
+    loadPreferences();
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
+  const toggleTheme = async () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    const preferences = { theme: nextTheme };
+    try {
+      if (window.desktop?.savePreferences) await window.desktop.savePreferences(preferences);
+      else localStorage.setItem('ac_preferences', JSON.stringify(preferences));
+    } catch (err) {
+      setError('Could not save display preference: ' + err.message);
+    }
+  };
+
+  // Electron sends these actions when the user presses a registered desktop shortcut.
+  useEffect(() => {
+    const removeListener = window.desktop?.onShortcut?.((action) => {
+      if (action === 'focus-search') document.getElementById('global-search')?.focus();
+      if (action === 'open-events') setTab('Events');
+    });
+    return () => removeListener?.();
+  }, []);
+
+  // Show only notifications that arrived after this account's previous app visit.
+  useEffect(() => {
+    if (!token || !user || !notifications.length || !window.desktop?.showNotification) return;
+    const key = 'ac_last_notification_' + user.id;
+    const newestId = Math.max(...notifications.map(item => Number(item.id) || 0));
+    const previousId = localStorage.getItem(key);
+    if (previousId === null) {
+      localStorage.setItem(key, String(newestId));
+      return;
+    }
+    const newestUnread = notifications
+      .filter(item => !item.is_read && Number(item.id) > Number(previousId))
+      .sort((a, b) => Number(b.id) - Number(a.id))[0];
+    if (newestUnread) {
+      window.desktop.showNotification({ title: newestUnread.title, body: newestUnread.body });
+    }
+    localStorage.setItem(key, String(Math.max(Number(previousId), newestId)));
+  }, [notifications, token, user]);
 
   const logout = () => {
     localStorage.removeItem('ac_token');
@@ -151,13 +213,24 @@ export default function App() {
     try {
       const response = await fetch(API + '/admin/alumni.csv', { headers: { Authorization: 'Bearer ' + token } });
       if (!response.ok) throw new Error('Could not download the report.');
-      const blob = await response.blob();
+      const csvText = await response.text();
+
+      // On desktop, ask the operating system where the report should be saved.
+      if (window.desktop?.saveAlumniCsv) {
+        const result = await window.desktop.saveAlumniCsv(csvText);
+        if (!result.canceled) setSuccess('Alumni report saved successfully.');
+        return;
+      }
+
+      // Browser fallback keeps the same page usable during web development.
+      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = 'alumni-report.csv';
       link.click();
       URL.revokeObjectURL(url);
+      setSuccess('Alumni report downloaded.');
     } catch (err) { setError(err.message); }
   };
 
@@ -246,8 +319,9 @@ export default function App() {
           <button className="mobile-menu icon-button" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle navigation"><Menu size={20} /></button>
           <div className="breadcrumb">Community <span>/</span> {tab}</div>
           <div className="top-actions">
-            <div className="search-field"><Search size={15} /><input placeholder="Search alumni..." value={search} onChange={e => setSearch(e.target.value)} /></div>
-            <button className="icon-button" onClick={() => setTab('Notifications')}><Bell size={18} /></button>
+            <div className="search-field"><Search size={15} /><input id="global-search" placeholder="Search alumni..." value={search} onChange={e => setSearch(e.target.value)} /></div>
+            <button className="icon-button" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
+            <button className="icon-button" onClick={() => setTab('Notifications')} title="Notifications"><Bell size={18} /></button>
             <div className="avatar">{initials(user.name)}</div>
           </div>
         </header>
