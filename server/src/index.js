@@ -253,13 +253,31 @@ app.post('/api/opportunities', authenticate, allowRoles('alumni', 'admin'), asyn
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
     [req.user.id, title.trim(), company.trim(), description.trim(), type, location, apply_by || null, application_url]
   );
+
+  await pool.query(
+    `INSERT INTO notifications (user_id, title, body)
+     SELECT id, 'New career opportunity', $1
+     FROM users WHERE role = 'student' AND id <> $2`,
+    [title.trim() + ' at ' + company.trim(), req.user.id]
+  );
   res.status(201).json(result.rows[0]);
 }));
 
 app.post('/api/opportunities/:id/apply', authenticate, allowRoles('student'), asyncRoute(async (req, res) => {
+  const opportunity = await pool.query(
+    'SELECT id, alumni_id, title FROM opportunities WHERE id = $1',
+    [req.params.id]
+  );
+  if (!opportunity.rows[0]) return res.status(404).json({ message: 'Opportunity not found.' });
+
   const result = await pool.query(
     'INSERT INTO opportunity_applications (opportunity_id, student_id, note) VALUES ($1, $2, $3) RETURNING *',
     [req.params.id, req.user.id, req.body.note || '']
+  );
+  await notify(
+    opportunity.rows[0].alumni_id,
+    'New opportunity application',
+    req.user.name + ' applied for ' + opportunity.rows[0].title + '.'
   );
   res.status(201).json(result.rows[0]);
 }));
@@ -298,14 +316,32 @@ app.post('/api/events', authenticate, allowRoles('admin', 'alumni'), asyncRoute(
     'INSERT INTO events (created_by, title, description, venue, starts_at) VALUES ($1, $2, $3, $4, $5) RETURNING *',
     [req.user.id, title.trim(), description, venue, starts_at]
   );
+  await pool.query(
+    `INSERT INTO notifications (user_id, title, body)
+     SELECT id, 'New community event', $1 FROM users WHERE id <> $2`,
+    [title.trim() + ' · ' + venue, req.user.id]
+  );
   res.status(201).json(result.rows[0]);
 }));
 
 app.post('/api/events/:id/register', authenticate, asyncRoute(async (req, res) => {
+  const event = await pool.query(
+    'SELECT id, created_by, title FROM events WHERE id = $1',
+    [req.params.id]
+  );
+  if (!event.rows[0]) return res.status(404).json({ message: 'Event not found.' });
+
   const result = await pool.query(
     'INSERT INTO event_registrations (event_id, user_id) VALUES ($1, $2) RETURNING *',
     [req.params.id, req.user.id]
   );
+  if (Number(event.rows[0].created_by) !== Number(req.user.id)) {
+    await notify(
+      event.rows[0].created_by,
+      'New event registration',
+      req.user.name + ' registered for ' + event.rows[0].title + '.'
+    );
+  }
   res.status(201).json(result.rows[0]);
 }));
 
