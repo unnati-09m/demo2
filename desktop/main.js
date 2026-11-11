@@ -1,3 +1,4 @@
+// Feature owner: Unnati — Electron Main Process, window, tray and native OS integration.
 import { app, BrowserWindow, dialog, globalShortcut, ipcMain, Menu, Notification } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
