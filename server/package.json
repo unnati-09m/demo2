@@ -6,7 +6,8 @@
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "db:setup": "node src/setup.js",
-    "seed": "node src/seed.js"
+    "seed": "node src/seed.js",
+    "test:smoke": "node src/smoke-test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
