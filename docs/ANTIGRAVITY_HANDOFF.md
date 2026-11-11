@@ -20,6 +20,8 @@ Run `npm run dev` from the repository root. It starts three programs:
 2. **Vite/React** at `http://localhost:5173` — renders the UI during development.
 3. **Electron** — opens a desktop window after the API and Vite server are ready.
 
+For the built local UI, run `npm run build:desktop`, keep the API running, then use `npm run start:desktop`.
+
 PostgreSQL must already be running. Create the database and configure `server/.env` first. Use your actual local database username and password; do not use the example placeholder word `password`.
 
 ## Where code lives
@@ -29,7 +31,11 @@ PostgreSQL must already be running. Create the database and configure `server/.e
 | `desktop/main.js` | Electron window, menu, tray and shortcuts | Unnati |
 | `desktop/preload.cjs` | Small safe API exposed to React | Unnati |
 | `desktop/ipc/register-handlers.js` | Native Save dialog, local settings and notifications | Unnati |
-| `client/src/App.jsx` | React app shell, authentication and feature sections | Shared integration; sections have owner comments |
+| `client/src/App.jsx` | React shell, authentication, shared state and navigation | Unnati |
+| `client/src/features/overview/OverviewPage.jsx` | Overview cards and navigation shortcuts | Unnati |
+| `client/src/features/alumni/AlumniPages.jsx` | Alumni directory and profile pages | Arshiyan |
+| `client/src/features/opportunities/OpportunityPages.jsx` | Career opportunity and application pages | Arshiyan |
+| `client/src/features/engagement/EngagementPages.jsx` | Mentorship, events, notifications and admin pages | Nayan Jyoti |
 | `client/src/styles.css` | UI styling and saved dark theme | Shared UI |
 | `server/src/index.js` | Express routes, validation and database calls; sections have owner comments | Shared API |
 | `server/src/schema.sql` | PostgreSQL tables and relationships | Shared DB |
