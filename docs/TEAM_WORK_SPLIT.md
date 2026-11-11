@@ -52,9 +52,9 @@ All three feature branches are created from `integration/desktop`. Each teammate
 - Alumni directory CSV export and the query/data mapping required for it.
 
 **Planned areas**
-- `client/src/features/alumni/`
-- `client/src/features/opportunities/`
-- Corresponding alumni and opportunity API route/controller/service files under `server/src/`.
+- `client/src/features/alumni/AlumniPages.jsx` — alumni directory and profile components.
+- `client/src/features/opportunities/OpportunityPages.jsx` — opportunity listings and student application history.
+- Corresponding alumni and opportunity API sections under `server/src/index.js`.
 - Alumni/opportunity DB queries and tests.
 
 **Acceptance checks**
@@ -74,11 +74,8 @@ All three feature branches are created from `integration/desktop`. Each teammate
 - Admin summaries for users, mentorship requests, events/opportunities and engagement records.
 
 **Planned areas**
-- `client/src/features/mentorship/`
-- `client/src/features/events/`
-- `client/src/features/notifications/`
-- `client/src/features/admin/`
-- Corresponding API route/controller/service files under `server/src/`.
+- `client/src/features/engagement/EngagementPages.jsx` — mentorship, events, notifications and admin report components.
+- Corresponding API sections under `server/src/index.js`.
 - Related database queries and tests.
 
 **Acceptance checks**
@@ -106,9 +103,9 @@ Do not access the filesystem or Node.js APIs directly from React. Use the Electr
 
 ## File ownership and avoiding merge conflicts
 
-The current starter application contains some combined files (for example, a central React app and a central Express entry point). Do not have multiple people independently edit the same large file.
+The React app shell now lives in `client/src/App.jsx`; its feature pages are separate owner-specific components. Unnati owns the shell, authentication and navigation. Arshiyan owns `AlumniPages.jsx` and `OpportunityPages.jsx`; Nayan Jyoti owns `EngagementPages.jsx`. Avoid editing another person's feature file without coordinating.
 
-As work begins, extract each person's feature into the planned feature folders and route/controller/service files above. Keep shared registration points small and coordinate changes to them with Unnati before editing. Put reusable components in shared folders only after agreeing who owns the change.
+The Express API is currently kept in `server/src/index.js` for beginner-friendly navigation, with feature-owner comments marking each route section. Because it is a shared file, coordinate API changes with Unnati before changing routes or shared middleware. As the project grows, route sections can be extracted into separate routers without changing the API contract.
 
 Add a short ownership comment at the top of new feature files, for example:
 
