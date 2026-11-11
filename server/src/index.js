@@ -10,7 +10,16 @@ const { Pool } = pg;
 const app = express();
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }));
+const allowedClientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+app.use(cors({
+  origin: (origin, callback) => {
+    // Electron's built React file may send a null origin; Vite uses the configured dev origin.
+    if (!origin || origin === 'null' || origin === allowedClientOrigin) {
+      return callback(null, true);
+    }
+    return callback(new Error('This client origin is not allowed.'));
+  }
+}));
 app.use(express.json({ limit: '1mb' }));
 
 const asyncRoute = (handler) => (req, res, next) =>
