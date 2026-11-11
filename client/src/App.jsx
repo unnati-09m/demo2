@@ -5,9 +5,8 @@ import {
   LayoutDashboard, LogOut, MapPin, Menu, Moon, Network, Plus, Search, Sun, Users, X
 } from 'lucide-react';
 import OverviewPage from './features/overview/OverviewPage.jsx';
-import {
-  AlumniDirectoryPage, ApplicationsPage, OpportunitiesPage, ProfilePage
-} from './features/alumni/AlumniPages.jsx';
+import { AlumniDirectoryPage, ProfilePage } from './features/alumni/AlumniPages.jsx';
+import { ApplicationsPage, OpportunitiesPage } from './features/opportunities/OpportunityPages.jsx';
 import {
   AdminReportsPage, EventsPage, MentorshipPage, NotificationsPage
 } from './features/engagement/EngagementPages.jsx';
