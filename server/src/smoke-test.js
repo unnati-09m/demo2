@@ -44,10 +44,10 @@ async function run() {
 
   const people = await call('/alumni', studentToken);
   assert.ok(people.length >= 4, 'alumni directory should return seeded alumni');
-  const alumniId = people[0].id;
-
   const profile = await call('/profile', alumniToken);
   assert.equal(profile.role, 'alumni');
+  const alumniId = profile.id;
+  assert.ok(people.some(person => person.id === alumniId), 'signed-in alumnus should appear in the directory');
 
   const mentorship = await call('/mentorship', studentToken, 'POST', {
     alumni_id: alumniId,
