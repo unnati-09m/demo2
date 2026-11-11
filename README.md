@@ -140,6 +140,7 @@ Feature PRs target `integration/desktop`. The final tested integration PR target
 - `docs/architecture.md`: Electron process model, IPC and persistence.
 - `docs/test-checklist.md`: manual test plan.
 - `docs/TEAM_WORK_SPLIT.md`: ownership, file boundaries and branches.
+- `docs/ANTIGRAVITY_HANDOFF.md`: beginner-friendly code map and prompts for each team member.
 
 ## Scope and honest limitations
 This is an academic prototype using fictional sample data. Notifications are in-app plus native desktop notifications when the Electron app receives new notification records; no email/SMS provider is connected. Donation pledges record an expression of interest and do not collect or transfer money. There is no institutional SSO or automated alumni identity verification. The app currently expects a separately running Express API and PostgreSQL service; the Electron desktop shell is not yet an all-in-one installer.
