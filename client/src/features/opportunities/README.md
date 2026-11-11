@@ -1,11 +1,8 @@
 # Career Opportunities Feature — Owner: Arshiyan
 
-Move opportunity listing, create-opportunity form, student application list and CSV-export UI helpers here as the current shared App.jsx is modularized.
+The working components are in `OpportunityPages.jsx`.
 
-Owned work:
-- Alumni create internship/job/project posts.
-- Students view and apply.
-- Student application history.
-- CSV export presentation and formatting.
+- `OpportunitiesPage`: alumni-posted internship, job and project listings; student apply action.
+- `ApplicationsPage`: current student's submitted application history.
 
-Use existing API endpoints in server/src/index.js. Keep PostgreSQL credentials out of the Renderer.
+Use the existing Express API and keep data access out of React components. The shared app shell passes records and actions through props.
