@@ -92,3 +92,15 @@ New public registrations can create student or alumni accounts. Admin accounts a
 This is an academic prototype, not a production alumni system. Demo data is fictional. Notifications are in-app only; no email/SMS provider is connected. Donation pledges record an expression of interest and do not collect or transfer money. There is no institutional SSO or automated identity verification. The CSV export is a simple data-extraction/reporting feature, not a scheduled production ETL pipeline.
 
 Before any public deployment, replace the demo credentials and JWT secret, configure secure HTTPS hosting, and review privacy, consent and data-retention requirements for real alumni information.
+
+
+## Team collaboration
+
+There are three contributors. Read [docs/TEAM_WORK_SPLIT.md](docs/TEAM_WORK_SPLIT.md) before editing code. It defines feature ownership, planned file boundaries, branch names, pull-request flow, persistence responsibilities and review expectations.
+
+### Feature branches
+- `feat/unnati-desktop-core` — Unnati
+- `feat/arshiyan-alumni-directory` — Arshiyan
+- `feat/nayan-jyoti-engagement` — Nayan Jyoti
+
+All feature branches start from `integration/desktop`. Open feature pull requests into `integration/desktop`; do not merge individual feature branches directly into `main`.
