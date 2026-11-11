@@ -113,6 +113,20 @@ Use `Cmd/Ctrl + K` to focus global search and `Cmd/Ctrl + Shift + E` to open Eve
 
 For browser-only UI work, use `npm run dev:client` while the API is running separately with `npm run dev:server`.
 
+### Open the built desktop UI
+
+After the client has been built, the Electron app can load the local built files instead of Vite:
+
+```bash
+npm run build:desktop
+# Keep the API running in one terminal:
+npm run dev:server
+# Open the built desktop window in another terminal:
+npm run start:desktop
+```
+
+The API and PostgreSQL service still run separately; the desktop app is not yet a self-contained installer.
+
 ## Demo flow
 1. Sign in as the seeded Student. Find the alumni directory, send a mentorship request, apply for an opportunity and register for an event.
 2. Sign in as Alumni. Update career details, accept/decline mentorship requests and publish a new opportunity or event.
