@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpRight, Bell, Check, Handshake, MapPin } from 'lucide-react';
+import { ArrowUpRight, Bell, Check, FileDown, Handshake, MapPin } from 'lucide-react';
 
 const dateText = value => value ? new Date(value).toLocaleDateString() : 'Not specified';
 
