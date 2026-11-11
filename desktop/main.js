@@ -7,7 +7,8 @@ import { createAppTray } from './tray.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const isDevelopment = !app.isPackaged;
+const developmentUrl = process.env.ELECTRON_START_URL;
+const isDevelopment = Boolean(developmentUrl);
 
 let mainWindow = null;
 let tray = null;
@@ -31,7 +32,7 @@ function createWindow() {
   });
 
   if (isDevelopment) {
-    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.loadURL(developmentUrl);
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../client/dist/index.html'));
