@@ -1,11 +1,10 @@
 # Community Engagement Feature — Owner: Nayan Jyoti
 
-Move mentorship, events, registrations and notification pages out of the current shared App.jsx into small components in this feature area.
+The working components are in `EngagementPages.jsx`.
 
-Owned work:
-- Mentorship request form and list.
-- Alumni accept/decline workflow.
-- Community event creation and registration.
-- In-app notifications and mark-as-read behaviour.
+- `MentorshipPage`: requests, student/alumni labels and accept/decline actions.
+- `EventsPage`: event details and registration state.
+- `NotificationsPage`: in-app notification list and mark-as-read.
+- `AdminReportsPage`: engagement summary cards and CSV export entry point.
 
-Use existing Express APIs and preserve role checks.
+Use the existing Express API and preserve role checks.
