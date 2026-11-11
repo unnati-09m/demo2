@@ -47,6 +47,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const logout = () => {
     localStorage.removeItem('ac_token');
@@ -224,12 +225,12 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <aside className={mobileOpen ? "sidebar open" : "sidebar"}>
         <div className="brand"><span className="brand-mark"><Network size={20} /></span> alumni<span>connect</span></div>
         <div className="workspace"><div className="workspace-icon">AC</div><div><strong>Alumni Community</strong><small>Community workspace</small></div></div>
         <div className="nav-caption">WORKSPACE</div>
         <nav>{navigation.map(([name, Icon]) => (
-          <button key={name} className={'nav-item ' + (tab === name ? 'active' : '')} onClick={() => setTab(name)}>
+          <button key={name} className={'nav-item ' + (tab === name ? 'active' : '')} onClick={() => { setTab(name); setMobileOpen(false); }}>
             <Icon size={17} /> {name}
             {name === 'Notifications' && notifications.some(item => !item.is_read) && <span className="nav-dot" />}
           </button>
@@ -242,6 +243,7 @@ export default function App() {
 
       <main className="main">
         <header className="topbar">
+          <button className="mobile-menu icon-button" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle navigation"><Menu size={20} /></button>
           <div className="breadcrumb">Community <span>/</span> {tab}</div>
           <div className="top-actions">
             <div className="search-field"><Search size={15} /><input placeholder="Search alumni..." value={search} onChange={e => setSearch(e.target.value)} /></div>
