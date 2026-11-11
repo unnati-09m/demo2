@@ -2,9 +2,15 @@ name: Build checks
 
 on:
   push:
-    branches: [main, alumni-platform]
+    branches:
+      - main
+      - alumni-platform
+      - integration/desktop
+      - "feat/**"
   pull_request:
-    branches: [main, alumni-platform]
+    branches:
+      - main
+      - integration/desktop
 
 jobs:
   verify:
@@ -12,20 +18,32 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Check server JavaScript syntax
-        working-directory: server
+          node-version: 24
+          cache: npm
+
+      - name: Install root desktop dependencies
+        run: npm install
+
+      - name: Install API dependencies
+        run: npm --prefix server install
+
+      - name: Install React dependencies
+        run: npm --prefix client install
+
+      - name: Check JavaScript syntax
         run: |
-          npm install
-          node --check src/index.js
-          node --check src/auth.js
-          node --check src/setup.js
-          node --check src/seed.js
+          node --check desktop/main.js
+          node --check desktop/ipc/register-handlers.js
+          node --check desktop/tray.js
+          node --check desktop/preload.cjs
+          node --check server/src/index.js
+          node --check server/src/auth.js
+          node --check server/src/setup.js
+          node --check server/src/seed.js
+
       - name: Build React frontend
-        working-directory: client
-        run: |
-          npm install
-          npm run build
+        run: npm --prefix client run build
