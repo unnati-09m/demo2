@@ -9,15 +9,18 @@
     "dev": "concurrently -k -n API,WEB,DESKTOP \"npm run dev:server\" \"npm run dev:client\" \"npm run dev:desktop\"",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
-    "dev:desktop": "wait-on tcp:4000 http-get://localhost:5173 && electron .",
+    "dev:desktop": "wait-on tcp:4000 http-get://localhost:5173 && cross-env ELECTRON_START_URL=http://localhost:5173 electron .",
     "db:setup": "npm --prefix server run db:setup",
     "seed": "npm --prefix server run seed",
     "build:client": "npm --prefix client run build",
-    "check": "node --check desktop/main.js && node --check desktop/ipc/register-handlers.js && node --check desktop/tray.js && node --check desktop/preload.cjs && npm --prefix client run build"
+    "check": "node --check desktop/main.js && node --check desktop/ipc/register-handlers.js && node --check desktop/tray.js && node --check desktop/preload.cjs && npm --prefix client run build",
+    "start:desktop": "electron .",
+    "build:desktop": "npm run build:client"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "electron": "^45.3.0",
-    "wait-on": "^8.0.4"
+    "wait-on": "^8.0.4",
+    "cross-env": "^7.0.3"
   }
 }
