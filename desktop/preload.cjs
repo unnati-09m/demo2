@@ -1,3 +1,4 @@
+// Feature owner: Unnati — secure Renderer-to-Main bridge.
 // Keep this file small: only expose the desktop actions that the UI needs.
 const { contextBridge, ipcRenderer } = require('electron');
 
