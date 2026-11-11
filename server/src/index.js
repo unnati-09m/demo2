@@ -25,7 +25,7 @@ const notify = async (userId, title, body) => {
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'AlumniConnect API' }));
 
-// Authentication
+// Feature owner: Unnati — authentication, JWT sessions and role-based access.
 app.post('/api/auth/register', asyncRoute(async (req, res) => {
   const { name, email, password, role = 'student' } = req.body;
   if (!name?.trim() || !email?.trim() || !password || password.length < 8) {
@@ -86,7 +86,7 @@ app.get('/api/me', authenticate, asyncRoute(async (req, res) => {
   res.json(result.rows[0]);
 }));
 
-// Dashboard and alumni directory
+// Feature owner: Arshiyan — alumni directory queries and career data.
 app.get('/api/dashboard', authenticate, asyncRoute(async (req, res) => {
   const [alumni, students, opportunities, events, pledges] = await Promise.all([
     pool.query("SELECT COUNT(*)::int AS count FROM users WHERE role = 'alumni'"),
@@ -187,7 +187,7 @@ app.put('/api/profile', authenticate, asyncRoute(async (req, res) => {
   res.json({ message: 'Profile updated.' });
 }));
 
-// Mentorship
+// Feature owner: Nayan Jyoti — mentorship workflow and notifications.
 app.post('/api/mentorship', authenticate, allowRoles('student'), asyncRoute(async (req, res) => {
   const { alumni_id, topic, message = '' } = req.body;
   if (!alumni_id || !topic?.trim()) {
@@ -229,7 +229,7 @@ app.patch('/api/mentorship/:id', authenticate, allowRoles('alumni'), asyncRoute(
   res.json(result.rows[0]);
 }));
 
-// Career opportunities and applications
+// Feature owner: Arshiyan — opportunities and student applications.
 app.get('/api/opportunities', authenticate, asyncRoute(async (req, res) => {
   const result = await pool.query(
     `SELECT o.*, u.name AS posted_by
@@ -294,7 +294,7 @@ app.get('/api/my-applications', authenticate, allowRoles('student'), asyncRoute(
   res.json(result.rows);
 }));
 
-// Events and registrations
+// Feature owner: Nayan Jyoti — community events and registrations.
 app.get('/api/events', authenticate, asyncRoute(async (req, res) => {
   const result = await pool.query(
     `SELECT e.*, u.name AS created_by_name,
@@ -345,7 +345,7 @@ app.post('/api/events/:id/register', authenticate, asyncRoute(async (req, res) =
   res.status(201).json(result.rows[0]);
 }));
 
-// Donation-interest records (this prototype does not collect money).
+// Feature owner: Nayan Jyoti — fundraising pledge records (no payment processing).
 app.post('/api/donation-pledges', authenticate, allowRoles('alumni'), asyncRoute(async (req, res) => {
   const { amount, purpose, note = '' } = req.body;
   if (!(Number(amount) > 0) || !purpose?.trim()) {
@@ -358,7 +358,7 @@ app.post('/api/donation-pledges', authenticate, allowRoles('alumni'), asyncRoute
   res.status(201).json(result.rows[0]);
 }));
 
-// Notifications and administrator reports
+// Feature owner: Nayan Jyoti — notification inbox and admin summaries.
 app.get('/api/notifications', authenticate, asyncRoute(async (req, res) => {
   const result = await pool.query(
     'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 30',
@@ -393,6 +393,7 @@ app.get('/api/admin/summary', authenticate, allowRoles('admin'), asyncRoute(asyn
   });
 }));
 
+// Feature owner: Arshiyan — alumni directory CSV report.
 app.get('/api/admin/alumni.csv', authenticate, allowRoles('admin'), asyncRoute(async (req, res) => {
   const result = await pool.query(
     `SELECT u.name, u.email, p.graduation_year, p.department, p.company,
