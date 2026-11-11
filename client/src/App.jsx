@@ -4,6 +4,13 @@ import {
   ChevronDown, Clock3, FileDown, GraduationCap, Handshake, HeartHandshake,
   LayoutDashboard, LogOut, MapPin, Menu, Moon, Network, Plus, Search, Sun, Users, X
 } from 'lucide-react';
+import OverviewPage from './features/overview/OverviewPage.jsx';
+import {
+  AlumniDirectoryPage, ApplicationsPage, OpportunitiesPage, ProfilePage
+} from './features/alumni/AlumniPages.jsx';
+import {
+  AdminReportsPage, EventsPage, MentorshipPage, NotificationsPage
+} from './features/engagement/EngagementPages.jsx';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -343,129 +350,30 @@ export default function App() {
           {success && <div className="success">{success}</div>}
           {busy && <div className="loading-line">Refreshing community information…</div>}
 
-          {tab === 'Overview' && (
-            <>
-              <section className="hero">
-                <div><span className="hero-kicker">A COMMUNITY THAT MOVES YOU FORWARD</span><h2>One network.<br /><em>Endless possibilities.</em></h2><p>Reconnect with your batch, learn from experiences and discover what is next.</p><button onClick={() => setTab('Alumni Directory')}>Explore alumni <ArrowUpRight size={15} /></button></div>
-                <div className="hero-orbit"><div className="orbit-ring ring-a" /><div className="orbit-ring ring-b" /><div className="orbit-core"><Network size={34} /></div><div className="orbit-bubble bubble-a"><Users /></div><div className="orbit-bubble bubble-b"><BriefcaseBusiness /></div><div className="orbit-bubble bubble-c"><GraduationCap /></div></div>
-              </section>
-              <div className="stats">{stats.map(([label, value, Icon, color]) => <div className="stat" key={label}><span className={'stat-icon ' + color}><Icon size={18} /></span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div>
-              <div className="section-heading"><div><h3>Explore your community</h3><p>Find people and opportunities that can help you grow.</p></div></div>
-              <div className="quick-links">
-                <button onClick={() => setTab('Alumni Directory')}><Users /><strong>Alumni directory</strong><span>Discover alumni by batch and career</span><ArrowUpRight /></button>
-                <button onClick={() => setTab('Mentorship')}><Handshake /><strong>Find a mentor</strong><span>Learn directly from experience</span><ArrowUpRight /></button>
-                <button onClick={() => setTab('Opportunities')}><BriefcaseBusiness /><strong>Career opportunities</strong><span>Explore internships shared by alumni</span><ArrowUpRight /></button>
-                <button onClick={() => setTab('Events')}><CalendarDays /><strong>Community events</strong><span>Connect at upcoming gatherings</span><ArrowUpRight /></button>
-              </div>
-            </>
-          )}
+          {tab === 'Overview' && <OverviewPage stats={stats} setTab={setTab} />}
 
           {/* Feature owner: Arshiyan — alumni profile directory, search and mentorship entry point. */}
-          {tab === 'Alumni Directory' && (
-            <>
-              <div className="section-heading"><div><h3>{filteredAlumni.length} alumni found</h3><p>Search using an alumni name, department, batch or company.</p></div></div>
-              <div className="people-grid">{filteredAlumni.map(person => (
-                <article className="person-card" key={person.id}>
-                  <div className="person-head"><div className="person-avatar">{initials(person.name)}</div><span className="tag">Class of {person.graduation_year}</span></div>
-                  <h3>{person.name}</h3><p className="person-role">{person.job_title || 'Alumni member'} {person.company ? 'at ' + person.company : ''}</p>
-                  <div className="person-meta"><span><GraduationCap size={14} /> {person.department}</span><span><MapPin size={14} /> {person.location || 'Not specified'}</span></div>
-                  <p className="person-bio">{person.bio || 'Open to connecting with students and fellow alumni.'}</p>
-                  {person.skills?.length > 0 && <div className="chips">{person.skills.slice(0, 4).map(skill => <span key={skill}>{skill}</span>)}</div>}
-                  {user.role === 'student' && <button className="button button-outline full" onClick={() => openModal('mentorship', { alumni_id: person.id, topic: 'Career guidance', message: '' })}>Request mentorship <ArrowUpRight size={14} /></button>}
-                  {person.linkedin_url && <a className="profile-link" href={person.linkedin_url} target="_blank" rel="noreferrer">LinkedIn profile <ArrowUpRight size={13} /></a>}
-                </article>
-              ))}</div>
-            </>
-          )}
+          {tab === 'Alumni Directory' && <AlumniDirectoryPage filteredAlumni={filteredAlumni} user={user} openModal={openModal} />}
 
           {/* Feature owner: Nayan Jyoti — mentorship requests and response workflow. */}
-          {tab === 'Mentorship' && (
-            <>
-              <div className="section-heading"><div><h3>{user.role === 'alumni' ? 'Requests for your guidance' : 'Your mentorship requests'}</h3><p>{user.role === 'alumni' ? 'Respond to students who would like to learn from you.' : 'Track the guidance requests you have sent.'}</p></div></div>
-              {mentorship.length ? <div className="list-card">{mentorship.map(item => (
-                <div className="list-row" key={item.id}><div className="list-icon"><Handshake size={18} /></div><div className="list-copy"><strong>{item.topic}</strong><small>{user.role === 'alumni' ? 'From ' + item.student_name : 'Mentor: ' + item.alumni_name} · {dateText(item.created_at)}</small><p>{item.message}</p></div><span className={'status ' + item.status}>{item.status}</span>
-                  {user.role === 'alumni' && item.status === 'pending' && <div className="row-actions"><button className="button button-small success-button" onClick={() => action('/mentorship/' + item.id, 'PATCH', { status: 'accepted' })}>Accept</button><button className="button button-small button-outline" onClick={() => action('/mentorship/' + item.id, 'PATCH', { status: 'declined' })}>Decline</button></div>}
-                </div>
-              ))}</div> : <div className="empty"><Handshake size={28} /><strong>No mentorship requests yet</strong><p>Requests and responses will appear here.</p></div>}
-            </>
-          )}
+          {tab === 'Mentorship' && <MentorshipPage mentorship={mentorship} user={user} action={action} />}
 
           {/* Feature owner: Arshiyan — career opportunities and student applications. */}
-          {tab === 'Opportunities' && (
-            <div className="opportunity-list">{opportunities.map(item => (
-              <article className="opportunity-card" key={item.id}><div className="opportunity-icon"><BriefcaseBusiness size={20} /></div><div className="opportunity-copy"><span className="eyebrow">{item.type} · {item.location}</span><h3>{item.title}</h3><p className="company"><Building2 size={14} /> {item.company} · Shared by {item.posted_by}</p><p>{item.description}</p>{item.apply_by && <small><Clock3 size={13} /> Apply by {dateText(item.apply_by)}</small>}{item.application_url && <a href={item.application_url} target="_blank" rel="noreferrer">External application link <ArrowUpRight size={13} /></a>}</div>{user.role === 'student' && <button className="button button-primary" onClick={() => action('/opportunities/' + item.id + '/apply', 'POST', {})}>Apply <ArrowUpRight size={14} /></button>}</article>
-            ))}{!opportunities.length && <div className="empty">No opportunities have been posted yet.</div>}</div>
-          )}
+          {tab === 'Opportunities' && <OpportunitiesPage opportunities={opportunities} user={user} action={action} />}
 
           {/* Feature owner: Arshiyan — students' submitted opportunity applications. */}
-          {tab === 'My Applications' && (
-            <div className="list-card">
-              {applications.length ? applications.map(item => (
-                <div className="list-row" key={item.id}>
-                  <div className="list-icon"><BriefcaseBusiness size={17} /></div>
-                  <div className="list-copy">
-                    <strong>{item.title}</strong>
-                    <small>{item.company} · {item.location} · Applied {dateText(item.created_at)}</small>
-                  </div>
-                  <span className={'status ' + item.status}>{item.status}</span>
-                </div>
-              )) : <div className="empty">You have not applied to any opportunities yet.</div>}
-            </div>
-          )}
+          {tab === 'My Applications' && <ApplicationsPage applications={applications} />}
 
           {/* Feature owner: Nayan Jyoti — events, registrations and attendee counts. */}
-          {tab === 'Events' && (
-            <div className="event-grid">{events.map(item => (
-              <article className="event-card" key={item.id}><div className="event-date"><strong>{new Date(item.starts_at).getDate()}</strong><span>{new Date(item.starts_at).toLocaleString('en', { month: 'short' })}</span></div><div className="event-copy"><span className="eyebrow">COMMUNITY EVENT</span><h3>{item.title}</h3><p>{item.description}</p><small><MapPin size={13} /> {item.venue} · {item.attendee_count} attending</small></div><button className={'button ' + (item.registered ? 'button-outline' : 'button-primary')} disabled={item.registered} onClick={() => action('/events/' + item.id + '/register')}>{item.registered ? 'Registered' : 'Register'} {item.registered ? <Check size={14} /> : <ArrowUpRight size={14} />}</button></article>
-            ))}{!events.length && <div className="empty">No events are scheduled yet.</div>}</div>
-          )}
+          {tab === 'Events' && <EventsPage events={events} action={action} />}
 
-          {tab === 'My Profile' && (
-            <div className="profile-card">
-              <div className="profile-cover" />
-              <div className="profile-heading"><div className="profile-avatar">{initials(profile.name || user.name)}</div><div><h2>{profile.name || user.name}</h2><p>{profile.role} · {profile.email}</p></div></div>
-              <form className="profile-form" onSubmit={saveProfile}>
-                <div className="form-grid">
-                  <label>Full name<input value={form.name ?? profile.name ?? ''} onChange={e => setValue('name', e.target.value)} /></label>
-                  {user.role === 'alumni' && <>
-                    <label>Graduation year<input type="number" value={form.graduation_year ?? profile.graduation_year ?? ''} onChange={e => setValue('graduation_year', e.target.value)} /></label>
-                    <label>Department<input value={form.department ?? profile.department ?? ''} onChange={e => setValue('department', e.target.value)} /></label>
-                    <label>Degree<input value={form.degree ?? profile.degree ?? ''} onChange={e => setValue('degree', e.target.value)} /></label>
-                    <label>Company<input value={form.company ?? profile.company ?? ''} onChange={e => setValue('company', e.target.value)} /></label>
-                    <label>Job title<input value={form.job_title ?? profile.job_title ?? ''} onChange={e => setValue('job_title', e.target.value)} /></label>
-                    <label>Location<input value={form.location ?? profile.location ?? ''} onChange={e => setValue('location', e.target.value)} /></label>
-                    <label>Skills (comma separated)<input value={form.skillsText ?? (profile.skills || []).join(', ')} onChange={e => setValue('skillsText', e.target.value)} /></label>
-                    <label className="span-two">LinkedIn URL<input value={form.linkedin_url ?? profile.linkedin_url ?? ''} onChange={e => setValue('linkedin_url', e.target.value)} /></label>
-                    <label className="span-two">Career summary<textarea value={form.bio ?? profile.bio ?? ''} onChange={e => setValue('bio', e.target.value)} /></label>
-                  </>}
-                </div>
-                {user.role === 'alumni' && <label className="public-toggle"><input type="checkbox" checked={form.is_public ?? profile.is_public ?? true} onChange={e => setValue('is_public', e.target.checked)} /> Show my profile in the alumni directory</label>}
-                <button className="button button-primary">Save profile</button>
-              </form>
-              {user.role === 'alumni' && <div className="pledge-panel"><div><strong>Support your institution</strong><p>Record a donation pledge interest for the admin team to follow up. No payment is collected here.</p></div><button className="button button-outline" onClick={() => openModal('pledge')}>Add pledge <Plus size={14} /></button></div>}
-            </div>
-          )}
+          {tab === 'My Profile' && <ProfilePage profile={profile} user={user} form={form} setValue={setValue} saveProfile={saveProfile} openModal={openModal} />}
 
           {/* Feature owner: Nayan Jyoti — in-app notifications and read state. */}
-          {tab === 'Notifications' && (
-            <div className="list-card">{notifications.length ? notifications.map(item => (
-              <div className="list-row" key={item.id}><div className="list-icon"><Bell size={17} /></div><div className="list-copy"><strong>{item.title}</strong><p>{item.body}</p><small>{new Date(item.created_at).toLocaleString()}</small></div>{!item.is_read && <button className="button button-small button-outline" onClick={() => action('/notifications/' + item.id + '/read', 'PATCH', {})}>Mark read</button>}</div>
-            )) : <div className="empty">No notifications yet.</div>}</div>
-          )}
+          {tab === 'Notifications' && <NotificationsPage notifications={notifications} action={action} />}
 
           {/* Feature owner: Nayan Jyoti — admin engagement summaries and report views. */}
-          {tab === 'Admin Reports' && user.role === 'admin' && (
-            <>
-              <div className="stats">{stats.map(([label, value, Icon, color]) => <div className="stat" key={label}><span className={'stat-icon ' + color}><Icon size={18} /></span><div><strong>{value}</strong><small>{label}</small></div></div>)}</div>
-              <div className="report-card"><div><h3>Alumni directory export</h3><p>Download alumni contact and career details as a CSV report.</p></div><button className="button button-primary" onClick={downloadCsv}><FileDown size={15} /> Export alumni CSV</button></div>
-              {adminSummary && <div className="report-grid">
-                <div className="report-card"><h3>Users by role</h3>{adminSummary.usersByRole.map(row => <p key={row.role} className="report-line"><span>{row.role}</span><strong>{row.count}</strong></p>)}</div>
-                <div className="report-card"><h3>Mentorship requests</h3>{adminSummary.mentorshipByStatus.map(row => <p key={row.status} className="report-line"><span>{row.status}</span><strong>{row.count}</strong></p>)}</div>
-                <div className="report-card"><h3>Opportunities</h3>{adminSummary.opportunitiesByType.map(row => <p key={row.type} className="report-line"><span>{row.type}</span><strong>{row.count}</strong></p>)}</div>
-                <div className="report-card"><h3>Donation pledges</h3>{adminSummary.pledgesByStatus.map(row => <p key={row.status} className="report-line"><span>{row.status} · ₹{Number(row.amount).toLocaleString('en-IN')}</span><strong>{row.count}</strong></p>)}</div>
-              </div>}
-            </>
-          )}
+          {tab === 'Admin Reports' && user.role === 'admin' && <AdminReportsPage stats={stats} adminSummary={adminSummary} downloadCsv={downloadCsv} />}
         </div>
       </main>
 
