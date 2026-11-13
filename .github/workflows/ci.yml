@@ -1,0 +1,58 @@
+name: AlumniConnect checks
+
+on:
+  push:
+    branches: [main, "feat/**", "ps/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/alumniconnect
+      JWT_SECRET: github-actions-only-secret-change-in-production
+      CLIENT_ORIGIN: http://localhost:5173
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: alumniconnect
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d alumniconnect"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: |
+          npm install
+          npm --prefix server install
+          npm --prefix client install
+      - name: Check server syntax
+        run: |
+          node --check server/src/index.js
+          node --check server/src/auth.js
+          node --check server/src/setup.js
+          node --check server/src/seed.js
+          node --check server/src/smoke-test.js
+      - name: Create schema and seed demo data
+        run: |
+          npm run db:setup
+          npm run seed
+      - name: Start API
+        run: npm run dev:server > /tmp/alumniconnect-api.log 2>&1 &
+      - name: Wait for API
+        run: npx wait-on tcp:4000
+      - name: Test database-backed workflows
+        run: npm test
+      - name: Build production frontend
+        run: npm run build
