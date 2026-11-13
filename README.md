@@ -12,11 +12,9 @@ AlumniConnect provides a shared alumni directory, verified profiles, career-hist
 
 - **Student:** registers with academic details, discovers verified alumni, requests mentorship, applies for internships/jobs/projects, tracks applications, registers for events and receives notifications.
 - **Alumni:** registers for institutional verification, maintains an alumni and career profile, manages career history, responds to mentorship requests, posts opportunities, reviews applicants, creates events and records pledge interest.
-- **Faculty:** supports engagement, views alumni and mentorship activity, creates events, publishes announcements and reviews reports.
-- **Administrator:** approves or rejects alumni/recruiter accounts, manages account access, views institution-wide reports, tracks pledge interest and exports the alumni directory.
-- **Recruiter / Employer:** registers for verification, publishes opportunities and reviews applicants.
+- **Admin / Institution:** verifies alumni registrations, manages student and alumni access, maintains institutional records, publishes announcements, creates events, reviews engagement reports, tracks pledge interest and exports alumni records.
 
-Public registration never grants administrator or faculty privileges. New alumni and recruiter accounts remain pending until approved by an institution administrator.
+The application has exactly three account roles: student, alumni and admin. Faculty and institution staff use the admin/institution workspace according to permissions granted by the institution. Employers and recruiters are supported through company and opportunity information; they do not have separate login accounts. Public registration is available only to students and alumni. Admin accounts are provisioned by the institution.
 
 ## Technology
 
@@ -68,10 +66,8 @@ All seeded demo accounts use the password `Demo@123` unless `DEMO_PASSWORD` was 
 | Role | Email |
 |---|---|
 | Admin | admin@alumniconnect.test |
-| Faculty | faculty@alumniconnect.test |
 | Alumni | alumni@alumniconnect.test |
 | Student | student@alumniconnect.test |
-| Recruiter | recruiter@alumniconnect.test |
 
 The seed also creates additional alumni profiles and sample opportunities/events. These are fictional demo records.
 
@@ -103,7 +99,7 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). The intended student-project deplo
 
 ## Scope and safeguards
 
-- Alumni and recruiter access is subject to institutional approval.
+- New alumni accounts remain pending until an institution administrator approves them.
 - Only verified and public alumni profiles appear in the student-facing directory.
 - CSV export is administrator-only and protects values that could be interpreted as spreadsheet formulas.
 - Donation records capture pledge interest and follow-up status; this version does not collect or transfer money.

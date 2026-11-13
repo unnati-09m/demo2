@@ -29,10 +29,10 @@ AlumniConnect addresses this gap with a centralized alumni management and engage
 5. Allow administrators to search, review and export alumni records.
 
 ### Accounts and access
-1. Support role-specific access for students, alumni, faculty, administrators and recruiters.
+1. Support exactly three account roles: students, alumni and administrators.
 2. Allow students to register and use student services after registration.
-3. Put alumni and recruiter registrations in a pending state until an institution administrator approves them.
-4. Do not allow public self-registration as administrator or faculty.
+3. Put alumni registrations in a pending state until an institution administrator approves them.
+4. Do not allow public self-registration as administrator.
 5. Store password hashes and protect API routes using signed authentication tokens.
 
 ### Networking and communication
@@ -40,25 +40,25 @@ AlumniConnect addresses this gap with a centralized alumni management and engage
 2. Let students send a mentorship request to a selected alumnus.
 3. Let the alumnus see the request in their own portal and accept, decline or complete it.
 4. Notify the student when the request status changes.
-5. Let faculty/administrators publish announcements to the whole community or selected audiences.
+5. Let administrators/institution staff publish announcements to the whole community, students or alumni.
 6. Store in-app notifications and allow the recipient to mark them as read.
 
 ### Career and opportunities
 1. Let alumni maintain a career timeline.
-2. Let verified alumni and approved recruiters post internships, jobs and projects.
+2. Let verified alumni and administrators publish internships, jobs and projects; employer/company information is captured in each listing.
 3. Let students submit applications and view application history.
 4. Let opportunity owners review applicants and update application status.
 5. Notify students when their application status changes.
 
 ### Events and institutional engagement
-1. Let alumni, faculty and administrators create events.
-2. Let students, alumni and faculty register for events.
+1. Let alumni and administrators create events.
+2. Let students and alumni register for events.
 3. Show registration counts and prevent duplicate registrations.
 4. Let alumni record donation pledge interest.
 5. Let administrators track pledge follow-up status. The prototype does not collect or transfer money.
 
 ### Administration
-1. Review and approve/reject alumni and recruiter registrations.
+1. Review and approve/reject alumni registrations.
 2. Activate or suspend community accounts.
 3. Review engagement and institutional summary reports.
 4. Export alumni directory data as CSV.
