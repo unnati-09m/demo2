@@ -11,13 +11,11 @@ const hash=await bcrypt.hash(password,12);
 try {
   const accounts=[
     ['admin','Demo Admin','admin@alumniconnect.test','admin','active'],
-    ['faculty','Dr. Faculty','faculty@alumniconnect.test','faculty','active'],
     ['alumni','Aarav Alumni','alumni@alumniconnect.test','alumni','active'],
     ['alumni2','Sana Mehta','sana@alumniconnect.test','alumni','active'],
     ['alumni3','Kabir Shah','kabir@alumniconnect.test','alumni','active'],
     ['alumni4','Riya Deshmukh','riya@alumniconnect.test','alumni','active'],
     ['student','Student Demo','student@alumniconnect.test','student','active'],
-    ['recruiter','Demo Recruiter','recruiter@alumniconnect.test','recruiter','active']
   ];
   const ids={};
   for (const [key,name,email,role,status] of accounts) {
@@ -39,11 +37,9 @@ try {
       [id,year,department,degree,company,title,location,bio,skills]
     );
   }
-  await pool.query('INSERT INTO faculty_profiles (user_id,department,designation) VALUES ($1,$2,$3) ON CONFLICT(user_id) DO NOTHING',[ids.faculty,'Computer Science','Faculty Coordinator']);
   await pool.query('INSERT INTO student_profiles (user_id,student_id,department,degree,current_year,graduation_year,skills,interests) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(user_id) DO NOTHING',[ids.student,'DEMO-001','Computer Science','B.Tech','Third Year',2027,['JavaScript','SQL'],['Mentorship','Web Development']]);
-  await pool.query('INSERT INTO recruiter_profiles (user_id,company,website,designation) VALUES ($1,$2,$3,$4) ON CONFLICT(user_id) DO NOTHING',[ids.recruiter,'Example Technologies','https://example.com','Talent Acquisition']);
   await pool.query("INSERT INTO opportunities (alumni_id,created_by,title,company,description,type,location,apply_by) SELECT $1,$1,'Frontend Developer Intern','Example Labs','Work with a product team on React interfaces.','internship','Remote',CURRENT_DATE+INTERVAL '30 days' WHERE NOT EXISTS(SELECT 1 FROM opportunities WHERE title='Frontend Developer Intern' AND COALESCE(created_by,alumni_id)=$1)",[ids.alumni]);
-  await pool.query("INSERT INTO opportunities (created_by,title,company,description,type,location,apply_by) SELECT $1,'Graduate Engineer Trainee','Example Technologies','Entry-level engineering role for graduating students.','job','Pune',CURRENT_DATE+INTERVAL '45 days' WHERE NOT EXISTS(SELECT 1 FROM opportunities WHERE title='Graduate Engineer Trainee' AND created_by=$1)",[ids.recruiter]);
-  await pool.query("INSERT INTO events (created_by,title,description,venue,starts_at) SELECT $1,'Alumni Connect Meetup','Meet alumni, ask questions and build professional connections.','Main Auditorium',NOW()+INTERVAL '14 days' WHERE NOT EXISTS(SELECT 1 FROM events WHERE title='Alumni Connect Meetup')",[ids.faculty]);
+  await pool.query("INSERT INTO opportunities (created_by,title,company,description,type,location,apply_by) SELECT $1,'Graduate Engineer Trainee','Example Technologies','Entry-level engineering role for graduating students.','job','Pune',CURRENT_DATE+INTERVAL '45 days' WHERE NOT EXISTS(SELECT 1 FROM opportunities WHERE title='Graduate Engineer Trainee' AND created_by=$1)",[ids.admin]);
+  await pool.query("INSERT INTO events (created_by,title,description,venue,starts_at) SELECT $1,'Alumni Connect Meetup','Meet alumni, ask questions and build professional connections.','Main Auditorium',NOW()+INTERVAL '14 days' WHERE NOT EXISTS(SELECT 1 FROM events WHERE title='Alumni Connect Meetup')",[ids.admin]);
   console.log('Demo data ready. All demo accounts use password: '+password);
 } finally { await pool.end(); }

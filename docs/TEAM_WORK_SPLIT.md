@@ -1,6 +1,6 @@
 # Three-Person Full-Stack Work Split
 
-Each teammate owns the frontend, backend, PostgreSQL changes and tests for their assigned feature area. This is a feature-based split, not a split where one person does only UI and another only APIs.
+The application has exactly three user roles: Student, Alumni and Admin. Each teammate owns the frontend, backend, PostgreSQL changes and tests for their assigned feature area. This is a feature-based split, not a split where one person does only UI and another only APIs.
 
 ## Unnati — Core, identity and student experience
 - Frontend: authentication, registration, student experience, role-based app shell and role-specific dashboards.

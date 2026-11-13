@@ -3,7 +3,7 @@
 ## ISD — Information Systems Design
 - Problem identification and stakeholder analysis.
 - Functional and non-functional requirements.
-- Role-based use cases for student, alumni, faculty, administrator and recruiter.
+- Role-based use cases for student, alumni and administrator.
 - System architecture and data-flow design.
 - Relational entity and relationship model.
 - Access, verification and privacy requirements.

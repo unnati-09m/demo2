@@ -35,21 +35,17 @@ PostgreSQL (local during development / Neon when deployed)
 ## Roles and access
 | Role | Main capabilities |
 |---|---|
-| Student | Profile, verified alumni directory, mentorship requests, applications, events, announcements and notifications |
-| Alumni | Profile and career history, mentorship inbox, opportunity posts, applicant review, events and pledge interest |
-| Faculty | Alumni and mentorship visibility, events, reports and announcements |
-| Administrator | Account verification/access, institution reports, donation follow-up and alumni CSV export |
-| Recruiter | Company profile, opportunities and applicant review after approval |
+| Student | Academic profile, verified alumni directory, mentorship requests, applications, events, announcements and notifications |
+| Alumni | Alumni/career profile and history, mentorship inbox, opportunity posts, applicant review, events and pledge interest |
+| Admin / Institution | Account verification/access, alumni records, announcements, event oversight, institutional reports, donation follow-up and CSV export |
 
-Administrators and faculty accounts are provisioned by the institution/seed process. Public registration is available to students, alumni and recruiters only. Alumni and recruiter accounts are pending until approved.
+The application has exactly three account roles: student, alumni and admin. Faculty and institution staff use the admin/institution workspace according to institutional permissions. Recruiters are represented through company and opportunity information; they do not have separate login accounts.
 
 ## Database
 PostgreSQL tables include:
 - users
 - student_profiles
 - alumni_profiles
-- faculty_profiles
-- recruiter_profiles
 - career_history
 - mentorship_requests
 - opportunities

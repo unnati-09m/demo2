@@ -5,7 +5,7 @@
 - [ ] Copy server/.env.example to server/.env and set DATABASE_URL and JWT_SECRET.
 - [ ] Run npm run db:setup and npm run seed.
 - [ ] Run npm run dev and open http://localhost:5173.
-- [ ] Sign in with the demo student, alumni, faculty, admin and recruiter accounts.
+- [ ] Sign in with the demo student, alumni and admin accounts.
 
 ## Student
 - [ ] Register a new student with academic details.
@@ -27,20 +27,9 @@
 - [ ] Update an application status and confirm the student receives a notification.
 - [ ] Create an event and record pledge interest.
 
-## Recruiter
-- [ ] Register a recruiter and confirm pending approval.
-- [ ] Approve the account as Admin.
-- [ ] Create an opportunity.
-- [ ] Review student applicants and update an application status.
-
-## Faculty
-- [ ] Sign in to the faculty workspace.
-- [ ] Create an event and publish an announcement.
-- [ ] Review engagement reports.
-
 ## Administrator
-- [ ] Review pending alumni and recruiter registrations.
-- [ ] Approve and reject test accounts.
+- [ ] Review pending alumni registrations.
+- [ ] Approve and reject test alumni accounts.
 - [ ] Suspend and reactivate a non-admin account.
 - [ ] View institution reports and donation pledge records.
 - [ ] Export the alumni directory as CSV.
