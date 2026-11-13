@@ -28,10 +28,13 @@ async function run() {
 
   const admin=await login('admin@alumniconnect.test');
   const alumni=await login('alumni@alumniconnect.test');
-  const faculty=await login('faculty@alumniconnect.test');
-  const recruiter=await login('recruiter@alumniconnect.test');
   const adminUsers=await ok('/admin/users',admin);
   assert.ok(adminUsers.length>=5,'admin sees institution accounts');
+  assert.ok(adminUsers.every(user=>['admin','alumni','student'].includes(user.role)),'only the three supported account roles exist');
+  for (const forbiddenRole of ['admin','faculty','recruiter']) {
+    const rejected=await call('/auth/register','', 'POST',{name:'Unsupported Role',email:'unsupported.'+forbiddenRole+'.'+Date.now()+'@example.test',password:'Testing@123',role:forbiddenRole});
+    assert.equal(rejected.response.status,400,forbiddenRole+' cannot self-register');
+  }
 
   const suffix=Date.now().toString();
   const newStudent=await ok('/auth/register','', 'POST',{
@@ -72,7 +75,7 @@ async function run() {
   const myApplications=await ok('/my-applications',student);
   assert.equal(myApplications.find(item=>item.id===application.id).status,'shortlisted');
 
-  const event=await ok('/events',faculty,'POST',{
+  const event=await ok('/events',admin,'POST',{
     title:'Smoke test community event',description:'An event used by automated tests.',venue:'Online',
     starts_at:new Date(Date.now()+10*86400000).toISOString()
   });
@@ -86,7 +89,7 @@ async function run() {
   const pledges=await ok('/donation-pledges',admin);
   assert.ok(pledges.some(item=>item.alumni_name==='Aarav Alumni'),'admin sees pledge interest');
 
-  await ok('/announcements',faculty,'POST',{title:'Smoke announcement',body:'A test institution update.',audience:'students'});
+  await ok('/announcements',admin,'POST',{title:'Smoke announcement',body:'A test institution update.',audience:'students'});
   const notices=await ok('/notifications',student);
   assert.ok(notices.length>0,'student receives notifications');
 
@@ -109,8 +112,8 @@ async function run() {
 
   const forbidden=await call('/admin/users',student);
   assert.equal(forbidden.response.status,403,'students cannot access admin user management');
-  const recruiterDashboard=await ok('/dashboard',recruiter);
-  assert.equal(recruiterDashboard.role,'recruiter');
+  const removedRecruiter=await call('/auth/login','', 'POST',{email:'recruiter@alumniconnect.test',password:'Demo@123'});
+  assert.equal(removedRecruiter.response.status,401,'legacy recruiter account has been removed');
   console.log('AlumniConnect end-to-end API smoke tests passed.');
 }
 run().catch(error=>{console.error(error);process.exitCode=1;});

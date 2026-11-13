@@ -76,8 +76,7 @@ app.get('/api/health', asyncRoute(async (_req,res) => {
   res.json({ status:'ok', service:'AlumniConnect', database:'connected' });
 }));
 
-// Public registration: only students, alumni and recruiters can self-register.
-// Alumni and recruiters wait for institutional verification. Faculty/admin accounts are seeded or provisioned.
+// Public registration is limited to students and alumni. Admin accounts are provisioned by the institution.
 app.post('/api/auth/register', asyncRoute(async (req,res) => {
   const name = text(req.body.name);
   const email = text(req.body.email).toLowerCase();
@@ -86,8 +85,8 @@ app.post('/api/auth/register', asyncRoute(async (req,res) => {
   if (!name || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== 'string' || password.length < 8) {
     return res.status(400).json({ message:'Enter a valid name, email and password of at least 8 characters.' });
   }
-  if (!['student','alumni','recruiter'].includes(role)) {
-    return res.status(400).json({ message:'Public registration is available for students, alumni and recruiters only.' });
+  if (!['student','alumni'].includes(role)) {
+    return res.status(400).json({ message:'Public registration is available for students and alumni only. Admin accounts are provisioned by the institution.' });
   }
   const status = role === 'student' ? 'active' : 'pending';
   const hash = await bcrypt.hash(password,12);
@@ -108,11 +107,6 @@ app.post('/api/auth/register', asyncRoute(async (req,res) => {
       await client.query(
         'INSERT INTO alumni_profiles (user_id,graduation_year,department,degree,company,job_title,location,linkedin_url,is_verified) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,FALSE)',
         [user.id,Number(req.body.graduation_year)||new Date().getFullYear(),text(req.body.department)||'Not specified',text(req.body.degree),text(req.body.company),text(req.body.job_title),text(req.body.location),text(req.body.linkedin_url)]
-      );
-    } else {
-      await client.query(
-        'INSERT INTO recruiter_profiles (user_id,company,website,designation) VALUES ($1,$2,$3,$4)',
-        [user.id,text(req.body.company),text(req.body.website),text(req.body.designation)]
       );
     }
     await client.query('COMMIT');
@@ -163,13 +157,6 @@ app.get('/api/dashboard',auth,asyncRoute(async (req,res) => {
     ]);
     return res.json({ role,pendingMentorship:requests.rows[0].count,postedOpportunities:jobs.rows[0].count,applicants:applicants.rows[0].count,careerEntries:career.rows[0].count,pledges:pledges.rows[0].count,verified:true });
   }
-  if (role === 'recruiter') {
-    const [jobs,applicants] = await Promise.all([
-      pool.query('SELECT COUNT(*)::int AS count FROM opportunities WHERE created_by=$1 AND is_active=TRUE',[id]),
-      pool.query('SELECT COUNT(*)::int AS count FROM opportunity_applications a JOIN opportunities o ON o.id=a.opportunity_id WHERE o.created_by=$1',[id])
-    ]);
-    return res.json({ role,postedOpportunities:jobs.rows[0].count,applicants:applicants.rows[0].count });
-  }
   const [users,alumni,pending,students,mentorship,opportunities,events,donations] = await Promise.all([
     count('SELECT COUNT(*)::int AS count FROM users'),
     count("SELECT COUNT(*)::int AS count FROM users WHERE role='alumni'"),
@@ -186,8 +173,7 @@ app.get('/api/dashboard',auth,asyncRoute(async (req,res) => {
 app.get('/api/alumni',auth,asyncRoute(async (req,res) => {
   const filters = { search:text(req.query.search),department:text(req.query.department),company:text(req.query.company),year:text(req.query.year) };
   const values = [];
-  let where = 'WHERE p.is_public=TRUE';
-  if (!['admin','faculty'].includes(req.user.role)) where += " AND p.is_verified=TRUE AND u.status='active'";
+  let where = req.user.role === 'admin' ? 'WHERE TRUE' : "WHERE p.is_public=TRUE AND p.is_verified=TRUE AND u.status='active'";
   if (filters.search) { values.push('%'+filters.search+'%'); const n=values.length; where += ' AND (u.name ILIKE $'+n+' OR p.company ILIKE $'+n+' OR p.job_title ILIKE $'+n+' OR p.department ILIKE $'+n+')'; }
   if (filters.department) { values.push(filters.department); where += ' AND p.department=$'+values.length; }
   if (filters.company) { values.push('%'+filters.company+'%'); where += ' AND p.company ILIKE $'+values.length; }
@@ -204,8 +190,6 @@ app.get('/api/profile',auth,asyncRoute(async (req,res) => {
   let extra = {};
   if (req.user.role==='alumni') extra = (await pool.query('SELECT * FROM alumni_profiles WHERE user_id=$1',[req.user.id])).rows[0] || {};
   if (req.user.role==='student') extra = (await pool.query('SELECT * FROM student_profiles WHERE user_id=$1',[req.user.id])).rows[0] || {};
-  if (req.user.role==='faculty') extra = (await pool.query('SELECT * FROM faculty_profiles WHERE user_id=$1',[req.user.id])).rows[0] || {};
-  if (req.user.role==='recruiter') extra = (await pool.query('SELECT * FROM recruiter_profiles WHERE user_id=$1',[req.user.id])).rows[0] || {};
   res.json({ ...extra, ...user, profile_id: extra.id ?? null, id: user.id });
 }));
 app.put('/api/profile',auth,active,asyncRoute(async (req,res) => {
@@ -225,10 +209,6 @@ app.put('/api/profile',auth,active,asyncRoute(async (req,res) => {
     await update('student_profiles',[
       ['student_id',text],['department',text],['degree',text],['current_year',text],['graduation_year',v=>v?Number(v):null],['skills',v=>Array.isArray(v)?v:[]],['interests',v=>Array.isArray(v)?v:[]]
     ]);
-  } else if (req.user.role==='recruiter') {
-    await update('recruiter_profiles',[['company',text],['website',text],['designation',text]]);
-  } else if (req.user.role==='faculty') {
-    await update('faculty_profiles',[['department',text],['designation',text]]);
   }
   res.json({ message:'Profile updated successfully.' });
 }));
@@ -262,7 +242,7 @@ app.post('/api/mentorship',auth,active,roles('student'),asyncRoute(async (req,re
 app.get('/api/mentorship',auth,asyncRoute(async (req,res) => {
   let where='WHERE m.student_id=$1',values=[req.user.id];
   if (req.user.role==='alumni') where='WHERE m.alumni_id=$1';
-  else if (['admin','faculty'].includes(req.user.role)) { where='WHERE TRUE'; values=[]; }
+  else if (req.user.role === 'admin') { where='WHERE TRUE'; values=[]; }
   const result=await pool.query('SELECT m.*,s.name AS student_name,s.email AS student_email,a.name AS alumni_name FROM mentorship_requests m JOIN users s ON s.id=m.student_id JOIN users a ON a.id=m.alumni_id '+where+' ORDER BY m.created_at DESC LIMIT 200',values);
   res.json(result.rows);
 }));
@@ -277,12 +257,12 @@ app.patch('/api/mentorship/:id',auth,active,roles('alumni'),asyncRoute(async (re
 
 app.get('/api/opportunities',auth,asyncRoute(async (req,res) => {
   const result=await pool.query(
-    "SELECT o.*,u.name AS posted_by,u.role AS poster_role FROM opportunities o LEFT JOIN users u ON u.id=COALESCE(o.created_by,o.alumni_id) WHERE (o.is_active=TRUE OR $1 IN ('admin','faculty')) AND (o.apply_by IS NULL OR o.apply_by>=CURRENT_DATE OR $1 IN ('admin','faculty')) ORDER BY o.created_at DESC LIMIT 200",
+    "SELECT o.*,u.name AS posted_by,u.role AS poster_role FROM opportunities o LEFT JOIN users u ON u.id=COALESCE(o.created_by,o.alumni_id) WHERE (o.is_active=TRUE OR $1='admin') AND (o.apply_by IS NULL OR o.apply_by>=CURRENT_DATE OR $1='admin') ORDER BY o.created_at DESC LIMIT 200",
     [req.user.role]
   );
   res.json(result.rows);
 }));
-app.post('/api/opportunities',auth,active,roles('alumni','recruiter','admin'),asyncRoute(async (req,res) => {
+app.post('/api/opportunities',auth,active,roles('alumni','admin'),asyncRoute(async (req,res) => {
   const title=text(req.body.title),company=text(req.body.company),description=text(req.body.description);
   const type=['internship','job','project'].includes(req.body.type)?req.body.type:'internship';
   if (!title||!company||!description) return res.status(400).json({message:'Title, company and description are required.'});
@@ -303,13 +283,13 @@ app.post('/api/opportunities/:id/apply',auth,active,roles('student'),asyncRoute(
 app.get('/api/my-applications',auth,roles('student'),asyncRoute(async (req,res) => {
   res.json((await pool.query('SELECT a.*,o.title,o.company,o.location,o.apply_by FROM opportunity_applications a JOIN opportunities o ON o.id=a.opportunity_id WHERE a.student_id=$1 ORDER BY a.created_at DESC',[req.user.id])).rows);
 }));
-app.get('/api/managed-applications',auth,roles('alumni','recruiter','admin'),asyncRoute(async (req,res) => {
+app.get('/api/managed-applications',auth,roles('alumni','admin'),asyncRoute(async (req,res) => {
   let where='TRUE',values=[];
   if (req.user.role!=='admin') { where='COALESCE(o.created_by,o.alumni_id)=$1'; values=[req.user.id]; }
   const result=await pool.query('SELECT a.id,a.status,a.note,a.resume_url,a.created_at,u.name AS student_name,u.email AS student_email,p.department,p.degree,p.current_year,o.title AS opportunity_title,o.company FROM opportunity_applications a JOIN opportunities o ON o.id=a.opportunity_id JOIN users u ON u.id=a.student_id LEFT JOIN student_profiles p ON p.user_id=u.id WHERE '+where+' ORDER BY a.created_at DESC LIMIT 300',values);
   res.json(result.rows);
 }));
-app.patch('/api/applications/:id/status',auth,active,roles('alumni','recruiter','admin'),asyncRoute(async (req,res) => {
+app.patch('/api/applications/:id/status',auth,active,roles('alumni','admin'),asyncRoute(async (req,res) => {
   if (!['reviewing','shortlisted','rejected','hired'].includes(req.body.status)) return res.status(400).json({message:'Invalid application status.'});
   const result=await pool.query('UPDATE opportunity_applications a SET status=$1,updated_at=NOW() FROM opportunities o WHERE a.id=$2 AND o.id=a.opportunity_id AND ($4=\'admin\' OR COALESCE(o.created_by,o.alumni_id)=$3) RETURNING a.*',[req.body.status,req.params.id,req.user.id,req.user.role]);
   if (!result.rows[0]) return res.status(404).json({message:'Application not found or not managed by your account.'});
@@ -321,7 +301,7 @@ app.get('/api/events',auth,asyncRoute(async (req,res) => {
   const result=await pool.query('SELECT e.*,u.name AS created_by_name,(SELECT COUNT(*)::int FROM event_registrations r WHERE r.event_id=e.id) AS attendee_count,EXISTS(SELECT 1 FROM event_registrations r WHERE r.event_id=e.id AND r.user_id=$1) AS registered FROM events e JOIN users u ON u.id=e.created_by ORDER BY e.starts_at LIMIT 200',[req.user.id]);
   res.json(result.rows);
 }));
-app.post('/api/events',auth,active,roles('admin','faculty','alumni'),asyncRoute(async (req,res) => {
+app.post('/api/events',auth,active,roles('admin','alumni'),asyncRoute(async (req,res) => {
   const title=text(req.body.title),starts=req.body.starts_at;
   if (!title||!starts||Number.isNaN(Date.parse(starts))||Date.parse(starts)<=Date.now()) return res.status(400).json({message:'Enter an event title and a future date.'});
   const result=await pool.query('INSERT INTO events (created_by,title,description,venue,starts_at) VALUES ($1,$2,$3,$4,$5) RETURNING *',[req.user.id,title,text(req.body.description),text(req.body.venue)||'Campus',new Date(starts).toISOString()]);
@@ -329,7 +309,7 @@ app.post('/api/events',auth,active,roles('admin','faculty','alumni'),asyncRoute(
   for (const row of recipients.rows) await notify(row.id,'New community event',title+' has been scheduled.');
   res.status(201).json(result.rows[0]);
 }));
-app.post('/api/events/:id/register',auth,active,roles('student','alumni','faculty'),asyncRoute(async (req,res) => {
+app.post('/api/events/:id/register',auth,active,roles('student','alumni'),asyncRoute(async (req,res) => {
   const event=await pool.query('SELECT id,title,created_by FROM events WHERE id=$1 AND starts_at>NOW()',[req.params.id]);
   if (!event.rows[0]) return res.status(404).json({message:'Event not found or registration has closed.'});
   const result=await pool.query('INSERT INTO event_registrations (event_id,user_id) VALUES ($1,$2) RETURNING *',[req.params.id,req.user.id]);
@@ -364,17 +344,17 @@ app.patch('/api/notifications/:id/read',auth,asyncRoute(async (req,res) => {
 }));
 
 app.get('/api/announcements',auth,asyncRoute(async (req,res) => {
-  const audience = req.user.role==='student'?'students':req.user.role==='alumni'?'alumni':req.user.role==='faculty'?'faculty':req.user.role==='recruiter'?'recruiters':'all';
+  const audience = req.user.role==='student'?'students':'alumni';
   const result = req.user.role === 'admin'
     ? await pool.query('SELECT a.*,u.name AS author FROM announcements a JOIN users u ON u.id=a.created_by ORDER BY a.created_at DESC LIMIT 50')
     : await pool.query("SELECT a.*,u.name AS author FROM announcements a JOIN users u ON u.id=a.created_by WHERE a.audience='all' OR a.audience=$1 ORDER BY a.created_at DESC LIMIT 50",[audience]);
   res.json(result.rows);
 }));
-app.post('/api/announcements',auth,active,roles('admin','faculty'),asyncRoute(async (req,res) => {
-  const title=text(req.body.title),body=text(req.body.body),audience=['all','students','alumni','faculty','recruiters'].includes(req.body.audience)?req.body.audience:'all';
+app.post('/api/announcements',auth,active,roles('admin'),asyncRoute(async (req,res) => {
+  const title=text(req.body.title),body=text(req.body.body),audience=['all','students','alumni'].includes(req.body.audience)?req.body.audience:'all';
   if (!title||!body) return res.status(400).json({message:'Announcement title and message are required.'});
   const result=await pool.query('INSERT INTO announcements (created_by,title,body,audience) VALUES ($1,$2,$3,$4) RETURNING *',[req.user.id,title,body,audience]);
-  const targetRole=audience==='all'?null:audience==='students'?'student':audience==='alumni'?'alumni':audience==='recruiters'?'recruiter':'faculty';
+  const targetRole=audience==='all'?null:audience==='students'?'student':'alumni';
   const recipients=await pool.query("SELECT id FROM users WHERE id<>$1 AND status='active' AND ($2::text IS NULL OR role=$2)",[req.user.id,targetRole]);
   for (const row of recipients.rows) await notify(row.id,'Institution announcement',title);
   res.status(201).json(result.rows[0]);
@@ -396,13 +376,13 @@ app.patch('/api/admin/users/:id/verification',auth,active,roles('admin'),asyncRo
   const decision=req.body.decision;
   if (!['approve','reject'].includes(decision)) return res.status(400).json({message:'Decision must be approve or reject.'});
   const user=(await pool.query('SELECT id,role FROM users WHERE id=$1',[req.params.id])).rows[0];
-  if (!user||!['alumni','recruiter'].includes(user.role)) return res.status(404).json({message:'Pending alumni or recruiter account not found.'});
+  if (!user||user.role!=='alumni') return res.status(404).json({message:'Pending alumni account not found.'});
   if (user.role==='alumni') await pool.query('UPDATE alumni_profiles SET is_verified=$1,verification_notes=$2 WHERE user_id=$3',[decision==='approve',text(req.body.notes),user.id]);
   await pool.query('UPDATE users SET status=$1 WHERE id=$2',[decision==='approve'?'active':'suspended',user.id]);
   await notify(user.id,'Account verification update',decision==='approve'?'Your account has been approved.':'Your account was not approved. Please contact the institution.');
   res.json({message:'Account '+(decision==='approve'?'approved':'rejected')+' successfully.'});
 }));
-app.get('/api/admin/reports',auth,roles('admin','faculty'),asyncRoute(async (_req,res) => {
+app.get('/api/admin/reports',auth,roles('admin'),asyncRoute(async (_req,res) => {
   const [users,mentorship,opps,events,pledges,career]=await Promise.all([
     pool.query('SELECT role,COUNT(*)::int AS count FROM users GROUP BY role ORDER BY role'),
     pool.query('SELECT status,COUNT(*)::int AS count FROM mentorship_requests GROUP BY status'),
