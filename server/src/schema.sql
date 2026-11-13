@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'active';
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','faculty','alumni','student','recruiter'));
+-- The final three-role constraint is applied after the compatibility migration below.
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_status_check;
 ALTER TABLE users ADD CONSTRAINT users_status_check CHECK (status IN ('active','pending','suspended'));
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users (LOWER(email));
@@ -48,21 +48,6 @@ CREATE TABLE IF NOT EXISTS student_profiles (
   graduation_year INTEGER,
   skills TEXT[] NOT NULL DEFAULT '{}',
   interests TEXT[] NOT NULL DEFAULT '{}',
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE TABLE IF NOT EXISTS faculty_profiles (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  department VARCHAR(100) DEFAULT '',
-  designation VARCHAR(100) DEFAULT '',
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE TABLE IF NOT EXISTS recruiter_profiles (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  company VARCHAR(180) NOT NULL DEFAULT '',
-  website TEXT DEFAULT '',
-  designation VARCHAR(100) DEFAULT '',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -187,3 +172,32 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id,is_re
 CREATE INDEX IF NOT EXISTS idx_career_history_alumni ON career_history(alumni_id,start_date DESC);
 CREATE INDEX IF NOT EXISTS idx_applications_student ON opportunity_applications(student_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_events_start ON events(starts_at);
+
+-- Consolidate legacy Faculty and Recruiter demo accounts into the final three-role model.
+-- Sample events, announcements and opportunity records are retained and transferred to the institution admin.
+DO $$
+DECLARE institution_admin_id INTEGER;
+BEGIN
+  SELECT id INTO institution_admin_id FROM users WHERE role='admin' ORDER BY id LIMIT 1;
+  IF institution_admin_id IS NOT NULL THEN
+    UPDATE events SET created_by=institution_admin_id
+      WHERE created_by IN (SELECT id FROM users WHERE role='faculty');
+    UPDATE announcements SET created_by=institution_admin_id
+      WHERE created_by IN (SELECT id FROM users WHERE role='faculty');
+    UPDATE opportunities SET created_by=institution_admin_id, alumni_id=NULL
+      WHERE created_by IN (SELECT id FROM users WHERE role='recruiter');
+  ELSE
+    DELETE FROM events WHERE created_by IN (SELECT id FROM users WHERE role='faculty');
+    DELETE FROM announcements WHERE created_by IN (SELECT id FROM users WHERE role='faculty');
+    UPDATE opportunities SET created_by=NULL, alumni_id=NULL
+      WHERE created_by IN (SELECT id FROM users WHERE role='recruiter');
+  END IF;
+  UPDATE announcements SET audience='all' WHERE audience IN ('faculty','recruiters');
+  DELETE FROM users WHERE role IN ('faculty','recruiter');
+END $$;
+DROP TABLE IF EXISTS faculty_profiles;
+DROP TABLE IF EXISTS recruiter_profiles;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin','alumni','student'));
+ALTER TABLE announcements DROP CONSTRAINT IF EXISTS announcements_audience_check;
+ALTER TABLE announcements ADD CONSTRAINT announcements_audience_check CHECK (audience IN ('all','students','alumni'));
