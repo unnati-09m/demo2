@@ -435,4 +435,4 @@ if (fs.existsSync(builtClient)) {
   app.get('*',(_req,res)=>res.sendFile(path.join(builtClient,'index.html')));
 }
 const port=Number(process.env.PORT)||4000;
-app.listen(port,()=>console.log('AlumniConnect web app listening on port '+port));
+app.listen(port,'0.0.0.0',()=>console.log('AlumniConnect web app listening on port '+port));
