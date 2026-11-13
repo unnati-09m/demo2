@@ -66,15 +66,6 @@ const navigation = {
     ['Mentorship','Mentorship',Handshake],['Opportunities','Opportunities',BriefcaseBusiness],['Events','Events',CalendarDays],
     ['Donation Tracking','Donation Tracking',HeartHandshake],['Reports','Reports',Activity],['Announcements','Announcements',Megaphone],
     ['Notifications','Notifications',Bell],['My Profile','My Profile',Settings]
-  ],
-  faculty: [
-    ['Overview','Overview',LayoutDashboard],['Alumni Directory','Alumni Directory',Users],['Mentorship','Mentorship',Handshake],
-    ['Events','Events',CalendarDays],['Reports','Reports',Activity],['Announcements','Announcements',Megaphone],
-    ['Notifications','Notifications',Bell],['My Profile','My Profile',Settings]
-  ],
-  recruiter: [
-    ['Overview','Overview',LayoutDashboard],['Opportunities','Opportunities',BriefcaseBusiness],['Applicants','Applicants',ClipboardList],
-    ['Notifications','Notifications',Bell],['My Profile','My Profile',Settings]
   ]
 };
 
@@ -103,7 +94,7 @@ export default function App() {
   const [search,setSearch] = useState('');
   const [authMode,setAuthMode] = useState('login');
   const [login,setLogin] = useState({email:'student@alumniconnect.test',password:DEMO_PASSWORD});
-  const [register,setRegister] = useState({name:'',email:'',password:'',role:'student',student_id:'',department:'',degree:'',current_year:'',graduation_year:'',company:'',website:'',designation:'',job_title:'',location:'',linkedin_url:''});
+  const [register,setRegister] = useState({name:'',email:'',password:'',role:'student',student_id:'',department:'',degree:'',current_year:'',graduation_year:'',company:'',job_title:'',location:'',linkedin_url:''});
   const [profileDraft,setProfileDraft] = useState({});
   const [mentorTarget,setMentorTarget] = useState(null);
   const [mentorForm,setMentorForm] = useState({topic:'Career guidance',message:''});
@@ -119,22 +110,20 @@ export default function App() {
     const tasks = [
       get('/dashboard',{}), get('/profile',{}), get('/notifications',[]), get('/announcements',[]), get('/events',[])
     ];
-    if (['student','alumni','admin','faculty'].includes(currentUser.role)) tasks.push(get('/alumni',[]));
+    if (['student','alumni','admin'].includes(currentUser.role)) tasks.push(get('/alumni',[]));
     else tasks.push(Promise.resolve([]));
-    if (['student','alumni','admin','faculty','recruiter'].includes(currentUser.role)) tasks.push(get('/opportunities',[]));
+    if (['student','alumni','admin'].includes(currentUser.role)) tasks.push(get('/opportunities',[]));
     else tasks.push(Promise.resolve([]));
-    if (['student','alumni','admin','faculty'].includes(currentUser.role)) tasks.push(get('/mentorship',[]));
+    if (['student','alumni','admin'].includes(currentUser.role)) tasks.push(get('/mentorship',[]));
     else tasks.push(Promise.resolve([]));
     if (currentUser.role === 'student') tasks.push(get('/my-applications',[]));
     else tasks.push(Promise.resolve([]));
-    if (['alumni','recruiter','admin'].includes(currentUser.role)) tasks.push(get('/managed-applications',[]));
+    if (['alumni','admin'].includes(currentUser.role)) tasks.push(get('/managed-applications',[]));
     else tasks.push(Promise.resolve([]));
     if (currentUser.role === 'alumni') tasks.push(get('/career-history',[]));
     else tasks.push(Promise.resolve([]));
     if (currentUser.role === 'admin') {
       tasks.push(get('/admin/users',[]),get('/admin/reports',null),get('/donation-pledges',[]));
-    } else if (currentUser.role === 'faculty') {
-      tasks.push(get('/admin/users',[]),get('/admin/reports',null),Promise.resolve([]));
     } else tasks.push(Promise.resolve([]),Promise.resolve(null),Promise.resolve([]));
     const values = await Promise.all(tasks);
     setDashboard(values[0]); setProfile(values[1]); setNotifications(values[2]); setAnnouncements(values[3]); setEvents(values[4]);
@@ -212,13 +201,13 @@ export default function App() {
     'Overview':['YOUR COMMUNITY','Overview','A live snapshot of your alumni network.'],
     'Alumni Directory':['NETWORK','Alumni directory','Discover verified alumni, career journeys and people willing to connect.'],
     'Mentorship':['GIVE AND GET GUIDANCE','Mentorship','Build meaningful student–alumni mentoring relationships.'],
-    'Opportunities':['CAREER NETWORK','Opportunities','Internships, jobs and projects shared by alumni and recruiters.'],
+    'Opportunities':['CAREER NETWORK','Opportunities','Internships, jobs and projects shared by alumni and the institution.'],
     'My Applications':['CAREER TRACKER','My applications','Track the opportunities you have applied for.'],
     'Applicants':['TALENT PIPELINE','Applicants','Review students who applied to opportunities you manage.'],
     'Events':['COMMUNITY','Events','Reconnect through institution and alumni community events.'],
     'Career History':['YOUR JOURNEY','Career history','Keep your professional progress and career updates in one place.'],
     'Donation Support':['GIVE BACK','Donation support','Record a pledge of support for your institution.'],
-    'User Management':['INSTITUTION','User management','Review accounts, approve alumni and recruiter registrations, and manage access.'],
+    'User Management':['INSTITUTION','User management','Review student and alumni accounts, verify alumni records, and manage access.'],
     'Donation Tracking':['INSTITUTION','Donation tracking','Follow up on alumni pledge interests.'],
     'Reports':['INSIGHTS','Community reports','Understand alumni engagement, opportunities and institutional activity.'],
     'Announcements':['COMMUNICATION','Announcements','Share official updates with the right community audience.'],
@@ -300,13 +289,13 @@ function AuthScreen({authMode,setAuthMode,login,setLogin,register,setRegister,si
           <button className="primary-btn full" disabled={busy}>{busy?'Signing in…':'Sign in'} <ArrowRight size={17}/></button>
         </form>
         <div className="demo-login"><strong>Demo access</strong><p>Try a role to explore the sample workspace.</p><div className="demo-chips">
-          {['student','alumni','faculty','admin','recruiter'].map(role=><button key={role} onClick={()=>setLogin({email:role+'@alumniconnect.test',password:DEMO_PASSWORD})}>{pretty(role)}</button>)}
+          {['student','alumni','admin'].map(role=><button key={role} onClick={()=>setLogin({email:role+'@alumniconnect.test',password:DEMO_PASSWORD})}>{pretty(role)}</button>)}
         </div><small>Password for demo accounts: {DEMO_PASSWORD}</small></div>
       </>:<>
         <span className="eyebrow">JOIN YOUR COMMUNITY</span><h2>Create your account</h2><p className="muted">Choose your role and share the details needed for your profile.</p>
         {error&&<div className="alert error">{error}</div>}
         <form className="form-stack register-form" onSubmit={signUp}>
-          <Field label="I am registering as" value={register.role} onChange={v=>set('role',v)} options={[{value:'student',label:'Current student'},{value:'alumni',label:'Alumnus / Alumna'},{value:'recruiter',label:'Employer / Recruiter'}]}/>
+          <Field label="I am registering as" value={register.role} onChange={v=>set('role',v)} options={[{value:'student',label:'Current student'},{value:'alumni',label:'Alumnus / Alumna'}]}/>
           <Field label="Full name" value={register.name} onChange={v=>set('name',v)} required/>
           <Field label="Email address" type="email" value={register.email} onChange={v=>set('email',v)} required/>
           <Field label="Password (minimum 8 characters)" type="password" value={register.password} onChange={v=>set('password',v)} required/>
@@ -320,13 +309,9 @@ function AuthScreen({authMode,setAuthMode,login,setLogin,register,setRegister,si
             <div className="form-two"><Field label="Degree" value={register.degree} onChange={v=>set('degree',v)}/><Field label="Current company" value={register.company} onChange={v=>set('company',v)}/></div>
             <div className="form-two"><Field label="Job title" value={register.job_title} onChange={v=>set('job_title',v)}/><Field label="Location" value={register.location} onChange={v=>set('location',v)}/></div>
           </>}
-          {register.role==='recruiter'&&<>
-            <Field label="Company" value={register.company} onChange={v=>set('company',v)} required/>
-            <div className="form-two"><Field label="Website" value={register.website} onChange={v=>set('website',v)}/><Field label="Designation" value={register.designation} onChange={v=>set('designation',v)}/></div>
-          </>}
           <button className="primary-btn full" disabled={busy}>{busy?'Creating account…':'Create account'} <ArrowRight size={17}/></button>
         </form>
-        <p className="approval-note">Alumni and recruiter accounts require institutional verification before accessing member features.</p>
+        <p className="approval-note">Alumni registrations require institutional verification before appearing in the student-facing directory.</p>
       </>}
       <div className="auth-legal">By continuing, you agree to use this community platform responsibly.</div>
     </div></section>
@@ -342,10 +327,8 @@ function Overview({role,user,data,alumni,mentorship,opportunities,events,announc
     ? [['Mentorship requests',data.mentorshipRequests,Handshake,'blue'],['Applications sent',data.applications,ClipboardList,'violet'],['Registered events',data.registeredEvents,CalendarDays,'orange'],['Verified alumni',data.verifiedAlumni,Users,'green']]
     : role==='alumni'
     ? [['Pending requests',data.pendingMentorship,Handshake,'orange'],['Opportunities posted',data.postedOpportunities,BriefcaseBusiness,'blue'],['Student applicants',data.applicants,Users,'violet'],['Career entries',data.careerEntries,Activity,'green']]
-    : role==='recruiter'
-    ? [['Active opportunities',data.postedOpportunities,BriefcaseBusiness,'blue'],['Student applicants',data.applicants,Users,'violet']]
     : [['Total users',data.totalUsers,Users,'blue'],['Alumni members',data.alumni,GraduationCap,'violet'],['Pending approvals',data.pendingApprovals,ShieldCheck,'orange'],['Mentorship requests',data.mentorshipRequests,Handshake,'green'],['Opportunities',data.opportunities,BriefcaseBusiness,'blue'],['Community events',data.events,CalendarDays,'orange']];
-  const subtitle = role==='student'?'Discover graduates, ask for guidance and take the next step in your career.':role==='alumni'?'Share your experience, guide current students and keep your career story current.':role==='recruiter'?'Connect with emerging talent from the institution.':role==='faculty'?'Support institutional engagement and strengthen the alumni network.':'Oversee the institution’s alumni relationships and engagement activity.';
+  const subtitle = role==='student'?'Discover graduates, ask for guidance and take the next step in your career.':role==='alumni'?'Share your experience, guide current students and keep your career story current.':'Oversee the institution’s alumni relationships and engagement activity.';
   return <div className="dashboard-content">
     <section className="welcome-banner"><div><span className="welcome-kicker">GOOD TO HAVE YOU HERE</span><h2>Welcome back, {firstName}.</h2><p>{subtitle}</p></div><div className="welcome-art"><div className="art-orbit orbit-one"/><div className="art-orbit orbit-two"/><div className="art-center"><Network size={34}/></div><span className="art-node node-one"><Users/></span><span className="art-node node-two"><Handshake/></span><span className="art-node node-three"><BriefcaseBusiness/></span></div></section>
     <div className="stats-grid">{cards.map(([label,value,icon,tone])=><Stat key={label} label={label} value={value} icon={icon} tone={tone}/>)}</div>
@@ -354,8 +337,6 @@ function Overview({role,user,data,alumni,mentorship,opportunities,events,announc
         <div className="quick-grid">
           {(role==='student'?[['Alumni Directory','Find graduates to learn from.',Users],['Mentorship','Ask for professional guidance.',Handshake],['Opportunities','Explore jobs and internships.',BriefcaseBusiness],['Events','Meet your community.',CalendarDays]]
           :role==='alumni'?[['Mentorship','Respond to student requests.',Handshake],['Opportunities','Share a career opportunity.',BriefcaseBusiness],['Career History','Update your professional journey.',Activity],['Events','Reconnect with your institution.',CalendarDays]]
-          :role==='recruiter'?[['Opportunities','Post roles for students.',BriefcaseBusiness],['Applicants','Review interested students.',ClipboardList]]
-          :role==='faculty'?[['Alumni Directory','Explore institution graduates.',Users],['Events','Create community events.',CalendarDays],['Announcements','Share an institutional update.',Megaphone],['Reports','Review engagement metrics.',Activity]]
           :[['User Management','Review new registrations.',ShieldCheck],['Alumni Directory','Review alumni records.',Users],['Reports','Explore community performance.',Activity],['Announcements','Communicate with the community.',Megaphone]]).map(([name,copy,Icon])=><button className="quick-card" key={name} onClick={()=>go(name)}><span className="quick-icon"><Icon size={18}/></span><strong>{name}</strong><small>{copy}</small><ArrowRight size={15}/></button>)}
         </div>
       </section>
@@ -406,7 +387,7 @@ function MentorshipComposer({person,form,setForm,close,submit}) {
 
 function Opportunities({items,role,form,setForm,run}) {
   const [showForm,setShowForm]=useState(false);
-  const canPost=['alumni','recruiter','admin'].includes(role);
+  const canPost=['alumni','admin'].includes(role);
   const set=(key,value)=>setForm(old=>({...old,[key]:value}));
   const submit=async e=>{e.preventDefault();const ok=await run('/opportunities','POST',form);if(ok){setShowForm(false);setForm({title:'',company:'',description:'',type:'internship',location:'Remote',apply_by:'',application_url:''});}};
   return <div className="content-stack">
@@ -414,7 +395,7 @@ function Opportunities({items,role,form,setForm,run}) {
     {showForm&&<form className="panel form-panel" onSubmit={submit}><div className="panel-heading"><div><span className="eyebrow">CAREER OPPORTUNITY</span><h3>Create a listing</h3></div></div><div className="form-grid"><Field label="Opportunity title" value={form.title} onChange={v=>set('title',v)} required/><Field label="Company" value={form.company} onChange={v=>set('company',v)} required/><Field label="Type" value={form.type} onChange={v=>set('type',v)} options={['internship','job','project'].map(v=>({value:v,label:pretty(v)}))}/><Field label="Location" value={form.location} onChange={v=>set('location',v)}/><Field label="Application deadline" type="date" value={form.apply_by} onChange={v=>set('apply_by',v)}/><Field label="Application URL" type="url" value={form.application_url} onChange={v=>set('application_url',v)}/><div className="span-two"><Field label="Description" rows={3} value={form.description} onChange={v=>set('description',v)} required/></div></div><button className="primary-btn">Publish opportunity <ArrowRight size={15}/></button></form>}
     {items.length?<div className="opportunity-grid">{items.map(item=><article className="opportunity-card" key={item.id}><div className="opportunity-top"><span className="opportunity-kind">{pretty(item.type)}</span><span className="poster-kind">{pretty(item.poster_role||'alumni')}</span></div><div className="opportunity-company"><span className="company-icon"><Building2 size={18}/></span><div><strong>{item.company}</strong><small>{item.location||'Location not specified'}</small></div></div><h3>{item.title}</h3><p>{item.description}</p><div className="opportunity-meta"><span><CalendarDays size={14}/> {item.apply_by?'Apply by '+dateText(item.apply_by):'Open until filled'}</span><span>Shared by {item.posted_by||'Community'}</span></div>
       {role==='student'&&<button className="primary-btn full" onClick={()=>run('/opportunities/'+item.id+'/apply','POST',{})}>Apply now <ArrowRight size={15}/></button>}
-      {canPost&&<small className="owner-note">Applicants for your listings appear in the Applicants section.</small>}</article>)}</div>:<Empty title="No opportunities available" detail="New internships, jobs and projects will appear here when shared by alumni or recruiters."/>}
+      {canPost&&<small className="owner-note">Applicants for your listings appear in the Applicants section.</small>}</article>)}</div>:<Empty title="No opportunities available" detail="New internships, jobs and projects will appear here when shared by alumni or the institution."/>}
   </div>;
 }
 function MyApplications({items}) {
@@ -424,13 +405,13 @@ function Applicants({items,run}) {
   return <section className="panel"><div className="panel-heading"><div><span className="eyebrow">RECRUITMENT</span><h3>Student applications</h3><p>Review applicants for opportunities posted by your account.</p></div><span className="count-chip">{items.length} applicants</span></div>{items.length?<div className="table-wrap"><table><thead><tr><th>Student</th><th>Opportunity</th><th>Education</th><th>Applied</th><th>Status</th><th>Update</th></tr></thead><tbody>{items.map(item=><tr key={item.id}><td><strong>{item.student_name}</strong><small>{item.student_email}</small></td><td>{item.opportunity_title}<small>{item.company}</small></td><td>{item.degree||'—'}<small>{item.department||''} {item.current_year||''}</small></td><td>{dateText(item.created_at)}</td><td><span className={'status-pill '+item.status}>{pretty(item.status)}</span></td><td><select value={item.status} onChange={e=>run('/applications/'+item.id+'/status','PATCH',{status:e.target.value})}>{['submitted','reviewing','shortlisted','rejected','hired'].map(v=><option key={v} value={v}>{pretty(v)}</option>)}</select>{item.resume_url&&<a className="profile-url" href={item.resume_url} target="_blank" rel="noreferrer">Resume <ArrowRight size={12}/></a>}</td></tr>)}</tbody></table></div>:<Empty title="No applicants yet" detail="Applications to your opportunities will appear here with student details and status controls."/>}</section>;
 }
 function Events({items,role,form,setForm,run}) {
-  const [showForm,setShowForm]=useState(false), canCreate=['admin','faculty','alumni'].includes(role);
+  const [showForm,setShowForm]=useState(false), canCreate=['admin','alumni'].includes(role);
   const set=(key,value)=>setForm(old=>({...old,[key]:value}));
   const submit=async e=>{e.preventDefault();const ok=await run('/events','POST',form);if(ok){setShowForm(false);setForm({title:'',description:'',venue:'Campus',starts_at:''});}};
   return <div className="content-stack">
     {canCreate&&<div className="action-strip"><div><strong>Bring the community together</strong><p>Create a reunion, career talk, workshop or networking event.</p></div><button className="primary-btn" onClick={()=>setShowForm(v=>!v)}><Plus size={16}/>{showForm?'Close form':'Create event'}</button></div>}
     {showForm&&<form className="panel form-panel" onSubmit={submit}><div className="panel-heading"><div><span className="eyebrow">COMMUNITY CALENDAR</span><h3>Schedule an event</h3></div></div><div className="form-grid"><Field label="Event title" value={form.title} onChange={v=>set('title',v)} required/><Field label="Venue or meeting link" value={form.venue} onChange={v=>set('venue',v)}/><Field label="Date and time" type="datetime-local" value={form.starts_at} onChange={v=>set('starts_at',v)} required/><div className="span-two"><Field label="Description" rows={3} value={form.description} onChange={v=>set('description',v)}/></div></div><button className="primary-btn">Publish event <ArrowRight size={15}/></button></form>}
-    {items.length?<div className="event-grid">{items.map(item=><article className="event-card" key={item.id}><div className="event-date"><b>{new Date(item.starts_at).getDate()}</b><span>{new Date(item.starts_at).toLocaleString('en',{month:'short'})}</span></div><div className="event-copy"><span className="eyebrow">COMMUNITY EVENT</span><h3>{item.title}</h3><p>{item.description}</p><div className="event-detail"><span><Building2 size={14}/> {item.venue}</span><span><Users size={14}/> {item.attendee_count||0} attending</span><span><CalendarDays size={14}/> {dateTimeText(item.starts_at)}</span></div><small>Organised by {item.created_by_name}</small></div><div className="event-join">{item.registered?<span className="registered"><Check size={15}/> Registered</span>:['student','alumni','faculty'].includes(role)?<button className="primary-btn small" onClick={()=>run('/events/'+item.id+'/register','POST',{})}>Register <ArrowRight size={14}/></button>:<span className="muted">View event</span>}</div></article>)}</div>:<Empty title="No events scheduled" detail="Community events will appear here once created by alumni, faculty or administrators."/>}
+    {items.length?<div className="event-grid">{items.map(item=><article className="event-card" key={item.id}><div className="event-date"><b>{new Date(item.starts_at).getDate()}</b><span>{new Date(item.starts_at).toLocaleString('en',{month:'short'})}</span></div><div className="event-copy"><span className="eyebrow">COMMUNITY EVENT</span><h3>{item.title}</h3><p>{item.description}</p><div className="event-detail"><span><Building2 size={14}/> {item.venue}</span><span><Users size={14}/> {item.attendee_count||0} attending</span><span><CalendarDays size={14}/> {dateTimeText(item.starts_at)}</span></div><small>Organised by {item.created_by_name}</small></div><div className="event-join">{item.registered?<span className="registered"><Check size={15}/> Registered</span>:['student','alumni'].includes(role)?<button className="primary-btn small" onClick={()=>run('/events/'+item.id+'/register','POST',{})}>Register <ArrowRight size={14}/></button>:<span className="muted">View event</span>}</div></article>)}</div>:<Empty title="No events scheduled" detail="Community events will appear here once created by alumni or administrators."/>}
   </div>;
 }
 function CareerHistory({items,form,setForm,run}) {
@@ -445,7 +426,7 @@ function DonationSupport({form,setForm,run}) {
 }
 function UserManagement({items,run}) {
   const pending=items.filter(x=>x.status==='pending');
-  return <section className="panel"><div className="panel-heading"><div><span className="eyebrow">ACCESS AND VERIFICATION</span><h3>Community accounts</h3><p>Approve alumni and recruiter accounts, and manage community access.</p></div><span className="count-chip">{pending.length} pending</span></div>{items.length?<div className="table-wrap"><table><thead><tr><th>Member</th><th>Role</th><th>Registered</th><th>Status</th><th>Actions</th></tr></thead><tbody>{items.map(item=><tr key={item.id}><td><strong>{item.name}</strong><small>{item.email}</small>{item.department&&<small>{item.department} {item.graduation_year?'· '+item.graduation_year:''}</small>}</td><td>{pretty(item.role)}</td><td>{dateText(item.created_at)}</td><td><span className={'status-pill '+item.status}>{pretty(item.status)}</span></td><td><div className="table-actions">{['alumni','recruiter'].includes(item.role)&&item.status==='pending'?<><button className="primary-btn tiny" onClick={()=>run('/admin/users/'+item.id+'/verification','PATCH',{decision:'approve'})}>Approve</button><button className="outline-btn tiny" onClick={()=>run('/admin/users/'+item.id+'/verification','PATCH',{decision:'reject'})}>Reject</button></>:item.role!=='admin'&&<button className="outline-btn tiny" onClick={()=>run('/admin/users/'+item.id+'/status','PATCH',{status:item.status==='active'?'suspended':'active'})}>{item.status==='active'?'Suspend':'Reactivate'}</button>}</div></td></tr>)}</tbody></table></div>:<Empty title="No accounts found" detail="Registered community accounts will appear here."/>}</section>;
+  return <section className="panel"><div className="panel-heading"><div><span className="eyebrow">ACCESS AND VERIFICATION</span><h3>Community accounts</h3><p>Approve alumni registrations and manage community access.</p></div><span className="count-chip">{pending.length} pending</span></div>{items.length?<div className="table-wrap"><table><thead><tr><th>Member</th><th>Role</th><th>Registered</th><th>Status</th><th>Actions</th></tr></thead><tbody>{items.map(item=><tr key={item.id}><td><strong>{item.name}</strong><small>{item.email}</small>{item.department&&<small>{item.department} {item.graduation_year?'· '+item.graduation_year:''}</small>}</td><td>{pretty(item.role)}</td><td>{dateText(item.created_at)}</td><td><span className={'status-pill '+item.status}>{pretty(item.status)}</span></td><td><div className="table-actions">{item.role==='alumni'&&item.status==='pending'?<><button className="primary-btn tiny" onClick={()=>run('/admin/users/'+item.id+'/verification','PATCH',{decision:'approve'})}>Approve</button><button className="outline-btn tiny" onClick={()=>run('/admin/users/'+item.id+'/verification','PATCH',{decision:'reject'})}>Reject</button></>:item.role!=='admin'&&<button className="outline-btn tiny" onClick={()=>run('/admin/users/'+item.id+'/status','PATCH',{status:item.status==='active'?'suspended':'active'})}>{item.status==='active'?'Suspend':'Reactivate'}</button>}</div></td></tr>)}</tbody></table></div>:<Empty title="No accounts found" detail="Registered community accounts will appear here."/>}</section>;
 }
 function DonationTracking({items,run}) {
   return <section className="panel"><div className="panel-heading"><div><span className="eyebrow">ALUMNI GIVING</span><h3>Pledge interests</h3><p>Track alumni pledge records and institutional follow-up status.</p></div></div>{items.length?<div className="table-wrap"><table><thead><tr><th>Alumnus</th><th>Amount</th><th>Purpose</th><th>Date</th><th>Status</th></tr></thead><tbody>{items.map(item=><tr key={item.id}><td><strong>{item.alumni_name}</strong><small>{item.email}</small></td><td>₹{Number(item.amount).toLocaleString('en-IN')}</td><td>{item.purpose}<small>{item.note}</small></td><td>{dateText(item.created_at)}</td><td><select value={item.status} onChange={e=>run('/donation-pledges/'+item.id,'PATCH',{status:e.target.value})}>{['interested','contacted','fulfilled','withdrawn'].map(v=><option key={v}>{v}</option>)}</select></td></tr>)}</tbody></table></div>:<Empty title="No pledge records yet" detail="Alumni pledge interests will appear here."/>}</section>;
@@ -463,8 +444,8 @@ function ReportCard({title,rows,label,amount}) {
   return <section className="panel report-card"><h3>{title}</h3>{rows.length?rows.map((row,i)=><div className="report-line" key={i}><span>{pretty(row[label])}</span><strong>{row.count}{amount&&row.amount!==undefined?' · ₹'+Number(row.amount).toLocaleString('en-IN'):''}</strong></div>):<p className="muted">No records yet.</p>}</section>;
 }
 function Announcements({items,role,form,setForm,run}) {
-  const canPost=['admin','faculty'].includes(role),set=(key,value)=>setForm(old=>({...old,[key]:value}));
-  return <div className="content-stack">{canPost&&<form className="panel form-panel" onSubmit={async e=>{e.preventDefault();const ok=await run('/announcements','POST',form);if(ok)setForm({title:'',body:'',audience:'all'});}}><div className="panel-heading"><div><span className="eyebrow">INSTITUTIONAL COMMUNICATION</span><h3>Publish an announcement</h3></div></div><div className="form-grid"><Field label="Announcement title" value={form.title} onChange={v=>set('title',v)} required/><Field label="Audience" value={form.audience} onChange={v=>set('audience',v)} options={['all','students','alumni','faculty','recruiters'].map(v=>({value:v,label:pretty(v)}))}/><div className="span-two"><Field label="Message" rows={3} value={form.body} onChange={v=>set('body',v)} required/></div></div><button className="primary-btn">Publish announcement <Megaphone size={15}/></button></form>}
+  const canPost=role==='admin',set=(key,value)=>setForm(old=>({...old,[key]:value}));
+  return <div className="content-stack">{canPost&&<form className="panel form-panel" onSubmit={async e=>{e.preventDefault();const ok=await run('/announcements','POST',form);if(ok)setForm({title:'',body:'',audience:'all'});}}><div className="panel-heading"><div><span className="eyebrow">INSTITUTIONAL COMMUNICATION</span><h3>Publish an announcement</h3></div></div><div className="form-grid"><Field label="Announcement title" value={form.title} onChange={v=>set('title',v)} required/><Field label="Audience" value={form.audience} onChange={v=>set('audience',v)} options={['all','students','alumni'].map(v=>({value:v,label:pretty(v)}))}/><div className="span-two"><Field label="Message" rows={3} value={form.body} onChange={v=>set('body',v)} required/></div></div><button className="primary-btn">Publish announcement <Megaphone size={15}/></button></form>}
     <section className="panel"><div className="panel-heading"><div><span className="eyebrow">COMMUNITY BULLETIN</span><h3>Recent announcements</h3></div></div>{items.length?items.map(item=><article className="announcement-item" key={item.id}><div className="announcement-symbol"><Megaphone size={18}/></div><div><div className="announcement-meta"><strong>{item.title}</strong><span>{pretty(item.audience)}</span></div><p>{item.body}</p><small>{item.author||'Institution'} · {dateTimeText(item.created_at)}</small></div></article>):<Empty title="No announcements" detail="Official institution updates will be published here."/>}</section>
   </div>;
 }
@@ -479,8 +460,6 @@ function Profile({role,profile,setProfile,run}) {
     <div className="form-grid"><Field label="Full name" value={profile.name||''} onChange={v=>set('name',v)} required/>
       {role==='student'&&<><Field label="Student ID" value={profile.student_id||''} onChange={v=>set('student_id',v)}/><Field label="Department" value={profile.department||''} onChange={v=>set('department',v)}/><Field label="Degree" value={profile.degree||''} onChange={v=>set('degree',v)}/><Field label="Current year" value={profile.current_year||''} onChange={v=>set('current_year',v)}/><Field label="Expected graduation year" type="number" value={profile.graduation_year||''} onChange={v=>set('graduation_year',v)}/><Field label="Skills (comma separated)" value={listString('skills')} onChange={v=>set('skills',v)}/><div className="span-two"><Field label="Interests (comma separated)" value={listString('interests')} onChange={v=>set('interests',v)}/></div></>}
       {role==='alumni'&&<><Field label="Graduation year" type="number" value={profile.graduation_year||''} onChange={v=>set('graduation_year',v)}/><Field label="Department" value={profile.department||''} onChange={v=>set('department',v)}/><Field label="Degree" value={profile.degree||''} onChange={v=>set('degree',v)}/><Field label="Current company" value={profile.company||''} onChange={v=>set('company',v)}/><Field label="Job title" value={profile.job_title||''} onChange={v=>set('job_title',v)}/><Field label="Location" value={profile.location||''} onChange={v=>set('location',v)}/><Field label="Skills (comma separated)" value={listString('skills')} onChange={v=>set('skills',v)}/><div className="span-two"><Field label="LinkedIn URL" type="url" value={profile.linkedin_url||''} onChange={v=>set('linkedin_url',v)}/><Field label="Professional summary" rows={3} value={profile.bio||''} onChange={v=>set('bio',v)}/></div><label className="check-field"><input type="checkbox" checked={profile.is_public!==false} onChange={e=>set('is_public',e.target.checked)}/> Show my profile in the alumni directory</label></>}
-      {role==='recruiter'&&<><Field label="Company" value={profile.company||''} onChange={v=>set('company',v)}/><Field label="Website" type="url" value={profile.website||''} onChange={v=>set('website',v)}/><Field label="Designation" value={profile.designation||''} onChange={v=>set('designation',v)}/></>}
-      {role==='faculty'&&<><Field label="Department" value={profile.department||''} onChange={v=>set('department',v)}/><Field label="Designation" value={profile.designation||''} onChange={v=>set('designation',v)}/></>}
       <label className="static-field"><span>Email address</span><strong>{profile.email}</strong><small>Contact an administrator to change your registered email.</small></label>
     </div><div className="form-actions"><button className="primary-btn">Save profile changes <Check size={15}/></button></div>
   </form>;
